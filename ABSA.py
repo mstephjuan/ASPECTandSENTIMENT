@@ -30,7 +30,7 @@ def getAspects(text):
     return aspects
 
 def getSentiment(texts):
-    model = pickle.load(open('modelNB.pkl', 'rb'))
+    model = pickle.load(open('SentimentModel/bigdata2modelNB.pkl', 'rb'))
 
     aspect_sentiments = []
     for text in texts:
@@ -161,13 +161,13 @@ aspect_list = getAspects(new_text)
 group_aspects = groupAspects(aspect_list)
 print(group_aspects)
 
-#sentiments = getSentiment(sentences)
-#print(embedder(sentences))
-#group_sentences = group_sentiments(sentiments, group_aspects, embedder)
-#for label, sentences in group_sentences.items():
-    #print(f"{label}:")
-    #for sentence in sentences:
-        #print(f"  {sentence}")
+sentiments = getSentiment(sentences)
+print(embedder(sentences))
+group_sentences = group_sentiments(sentiments, group_aspects, embedder)
+for label, sentences in group_sentences.items():
+    print(f"{label}:")
+    for sentence in sentences:
+        print(f"  {sentence}")
 
 #print(group_aspects)
 #for item in group_sentences:
