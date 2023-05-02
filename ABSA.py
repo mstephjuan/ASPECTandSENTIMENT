@@ -55,7 +55,7 @@ def getSentiment(texts):
         p_stemmer = PorterStemmer()
 
         # Remove HTML
-        review_text = BeautifulSoup(text).get_text()
+        review_text = BeautifulSoup(text, features="html.parser").get_text()
 
         # Remove non-letters
         letters_only = re.sub("[^a-zA-Z]", " ", review_text)
@@ -97,14 +97,14 @@ def getSentiment(texts):
 from collections import Counter
 
 def groupAspects(aspect_list, sentences):
-    # Load pre-trained Word2Vec model
+    
     word_model = KeyedVectors.load_word2vec_format("Aspect-Extraction/GoogleNews-vectors-negative300.bin", binary=True, limit=500000)
 
     # Convert aspects to word vectors
     aspect_vectors = [word_model[aspect] for aspect in aspect_list]
 
     # Cluster word vectors using k-means
-    kmeans = KMeans(n_clusters=4)
+    kmeans = KMeans(n_clusters=3, n_init=10)
     kmeans.fit(aspect_vectors)
     clusters = kmeans.predict(aspect_vectors)
 
@@ -184,15 +184,17 @@ group_aspects = groupAspects(aspect_list, sentences)
 sentiments = getSentiment(sentences)
 #print(embedder(sentences))
 group_sentences = group_sentiments(sentiments, group_aspects, embedder)
-#for label, sentences in group_sentences.items():
-    #print(f"{label}:")
-    #for sentence in sentences:
-        #print(f"  {sentence}")
-#overall_sent_score = extract_positive_probabilities(group_sentences)
+# for label, sentences in group_sentences.items():
+#     print(f"{label}:")
+#     for sentence in sentences:
+#         print(f"  {sentence}")
+# overall_sent_score = extract_positive_probabilities(group_sentences)
+
 if __name__ == '__main__':
     overall_sent_score = extract_positive_probabilities(group_sentences)
     output_json = json.dumps(overall_sent_score)
     print(output_json)
+
 #for item in group_sentences:
     #print(item)
 #for sentiment in getSentiment(sentences):
