@@ -188,11 +188,10 @@ group_sentences = group_sentiments(sentiments, group_aspects, embedder)
     #print(f"{label}:")
     #for sentence in sentences:
         #print(f"  {sentence}")
-#overall_sent_score = extract_positive_probabilities(group_sentences)
-if __name__ == '__main__':
-    overall_sent_score = extract_positive_probabilities(group_sentences)
-    output_json = json.dumps(overall_sent_score)
-    print(output_json)
+overall_sent_score = extract_positive_probabilities(group_sentences)
+for label, score in overall_sent_score.items():
+    print(f"{[label]}: {score}")
+#print(group_aspects)
 #for item in group_sentences:
     #print(item)
 #for sentiment in getSentiment(sentences):

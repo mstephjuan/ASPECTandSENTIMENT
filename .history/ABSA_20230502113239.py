@@ -30,7 +30,7 @@ def getAspects(text):
     return aspects
 
 def getSentiment(texts):
-    model = pickle.load(open("C:/Users/acer/Documents/GitHub/ASPECTandSENTIMENT/SentimentModel/bigdatamodelNB.pkl", 'rb'))
+    model = pickle.load(open('bigdatamodelNB.pkl', 'rb'))
 
     aspect_sentiments = []
     for text in texts:
@@ -151,29 +151,21 @@ def embedder(texts):
     return embed(texts).numpy()
 
 sentences = [
-    # Positive sentences
-    "The battery life on this device is impressive.",
-    "The camera takes stunning photos in low light.",
-    "The screen quality is excellent with vibrant colors.",
-    "The performance of this device is incredibly fast.",
-    "Battery performance is outstanding, lasting all day.",
-    "The camera produces sharp and clear images.",
-    "The screen resolution is top-notch and provides a great viewing experience.",
-    "This device delivers exceptional performance for demanding tasks.",
-    "The battery charges quickly and holds the charge well.",
-    "The camera features various modes that enhance photography.",
-    "The screen size is perfect, providing ample space for content.",
-    "The device handles resource-intensive applications with ease.",
-    "Battery efficiency is one of the standout features.",
-    "The camera autofocus is quick and accurate.",
-    "The screen brightness can be adjusted to suit any environment.",
-    
-    # Negative sentences
-    "The battery drains too quickly and needs frequent charging.",
-    "The camera struggles in low light conditions, resulting in blurry photos.",
-    "The screen has a noticeable color shift when viewed from certain angles.",
-    "The device lags and experiences slowdowns during multitasking.",
-    "Battery life is disappointing, requiring constant recharging.",
+    "The device has a large and vibrant display that makes everything look great.",
+    "Its camera takes stunning photos with vivid colors and sharp details.",
+    "The battery life is impressive and lasts all day with heavy use.",
+    "The size is perfect for one-handed use and fits comfortably in a pocket.",
+    "The screen is responsive and easy to navigate with intuitive gestures.",
+    "The pictures captured by the camera are of professional quality.",
+    "The life of the device is extended by its durable construction and regular software updates.",
+    "The colors on the display are accurate and true to life.",
+    "The performance is smooth and fast, even when running multiple apps at once.",
+    "The design is sleek and modern, with a premium feel.",
+    "The display is protected by scratch-resistant glass for added durability.",
+    "The camera has advanced features such as portrait mode and night mode for stunning photos in any lighting condition.",
+    "The battery charges quickly and supports wireless charging for added convenience.",
+    "The size of the device is perfect for watching videos and playing games.",
+    "The screen has a high resolution for sharp and clear images."
 ]
 
 new_text = ' '.join(sentences)
@@ -188,11 +180,10 @@ group_sentences = group_sentiments(sentiments, group_aspects, embedder)
     #print(f"{label}:")
     #for sentence in sentences:
         #print(f"  {sentence}")
-#overall_sent_score = extract_positive_probabilities(group_sentences)
-if __name__ == '__main__':
-    overall_sent_score = extract_positive_probabilities(group_sentences)
-    output_json = json.dumps(overall_sent_score)
-    print(output_json)
+overall_sent_score = extract_positive_probabilities(group_sentences)
+for label, score in overall_sent_score.items():
+    print(f"{[label]}: {score}")
+#print(group_aspects)
 #for item in group_sentences:
     #print(item)
 #for sentiment in getSentiment(sentences):
