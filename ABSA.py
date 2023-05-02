@@ -9,7 +9,7 @@ import tensorflow_hub as hub
 from gensim.models import KeyedVectors
 from sklearn.cluster import KMeans
 from scipy.spatial.distance import cdist
-from sentence_transformers import SentenceTransformer
+#from sentence_transformers import SentenceTransformer
 import numpy as np
 nlp = spacy.load("en_core_web_lg")
 import json
