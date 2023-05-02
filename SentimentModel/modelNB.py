@@ -4,6 +4,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.naive_bayes import MultinomialNB
+from sklearn.metrics import classification_report, accuracy_score, confusion_matrix
 import pickle
 
 # Read the clean dataset
@@ -37,6 +38,15 @@ gs_tvec_nb = GridSearchCV(pipe_tvec_nb, # Objects to optimise
 
 # Fit model on to training data
 gs_tvec_nb.fit(X_train, y_train)
+
+
+# Evaluation
+test = pd.read_csv('./SentimentModel/clean_test.csv')
+test['target'].value_counts(normalize=True)
+X_test = test['content_stem']
+y_test = test['target']
+test_pred = gs_tvec_nb.predict(X_test)
+print("Accuracy Score: ", accuracy_score(y_test, test_pred))
 
 
 print('Saving model to disk')
