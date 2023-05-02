@@ -30,7 +30,7 @@ def getAspects(text):
     return aspects
 
 def getSentiment(texts):
-    model = pickle.load(open('SentimentModel/bigdata2modelNB.pkl', 'rb'))
+    model = pickle.load(open("C:/Users/acer/Documents/GitHub/ASPECTandSENTIMENT/SentimentModel/bigdatamodelNB.pkl", 'rb'))
 
     aspect_sentiments = []
     for text in texts:
@@ -94,82 +94,105 @@ def getSentiment(texts):
     #return output, positive_prob
 
 
-def groupAspects(aspect_list):
+from collections import Counter
+
+def groupAspects(aspect_list, sentences):
     # Load pre-trained Word2Vec model
-    word_model = KeyedVectors.load_word2vec_format('Aspect-Extraction/GoogleNews-vectors-negative300.bin', 
-                                                binary=True, limit=500000)
+    word_model = KeyedVectors.load_word2vec_format("C:/Users/acer/Desktop/python_sht/GoogleNews-vectors-negative300.bin", binary=True, limit=500000)
 
     # Convert aspects to word vectors
     aspect_vectors = [word_model[aspect] for aspect in aspect_list]
 
     # Cluster word vectors using k-means
-    kmeans = KMeans(n_clusters=7)
+    kmeans = KMeans(n_clusters=4)
     kmeans.fit(aspect_vectors)
     clusters = kmeans.predict(aspect_vectors)
 
     # Find representative label for each cluster
     labels = []
     grouped_aspects = {}
+    #used_aspects = set()
     for i in range(kmeans.n_clusters):
-        cluster_vectors = [aspect_vectors[j] for j in range(len(aspect_vectors)) if clusters[j] == i]
-        centroid = np.mean(cluster_vectors, axis=0)
-        distances = cdist([centroid], cluster_vectors, metric='cosine')
-        closest_index = np.argmin(distances)
-        label = aspect_list[np.where(clusters == i)[0][closest_index]]
-        labels.append(label)
-        grouped_aspects[label] = [aspect_list[j] for j in range(len(aspect_list)) if clusters[j] == i]
-
+        cluster_aspects = set(aspect_list[j] for j in range(len(aspect_list)) if clusters[j] == i)
+        aspect_counts = Counter([aspect for sentence in sentences for aspect in cluster_aspects if aspect in sentence])
+        most_common_aspect = aspect_counts.most_common(1)[0][0]
+        labels.append(most_common_aspect)
+        grouped_aspects[most_common_aspect] = cluster_aspects
     return grouped_aspects
 
 from sklearn.metrics.pairwise import cosine_similarity
 
 def group_sentiments(aspect_sentiments, grouped_aspects, embedder):
     result = {}
-    for label, aspects in grouped_aspects.items():
+    used_sentences = set()
+    for label in grouped_aspects.keys():
         result[label] = []
-        aspect_embeddings = embedder(aspects)
+        label_embedding = embedder([label])[0]
         for text, output, positive_prob in aspect_sentiments:
-            text_embedding = embedder([text])[0]
-            similarities = cosine_similarity(text_embedding.reshape(1,-1), aspect_embeddings)
-            if max(similarities[0]) > 0.289:
-                result[label].append((text, output, positive_prob))
+            if text not in used_sentences:
+                text_embedding = embedder([text])[0]
+                similarity = cosine_similarity(text_embedding.reshape(1,-1), label_embedding.reshape(1,-1))
+                if similarity > 0.14:
+                    result[label].append((text, output, positive_prob))
+                    used_sentences.add(text)
     return result
 
+def extract_positive_probabilities(result):
+    new_dict = {}
+    for label, values in result.items():
+        scores = [positive_prob for text, output, positive_prob in values]
+        if len(scores) > 0:
+            sentiment_score = sum(scores) / len(scores)
+        else:
+            sentiment_score = 0
+        new_dict[label] = sentiment_score * 100
+    return new_dict
 def embedder(texts):
     return embed(texts).numpy()
 
 sentences = [
-    "The device has a large and vibrant display that makes everything look great.",
-    "Its camera takes stunning photos with vivid colors and sharp details.",
-    "The battery life is impressive and lasts all day with heavy use.",
-    "The size is perfect for one-handed use and fits comfortably in a pocket.",
-    "The screen is responsive and easy to navigate with intuitive gestures.",
-    "The pictures captured by the camera are of professional quality.",
-    "The life of the device is extended by its durable construction and regular software updates.",
-    "The colors on the display are accurate and true to life.",
-    "The performance is smooth and fast, even when running multiple apps at once.",
-    "The design is sleek and modern, with a premium feel.",
-    "The display is protected by scratch-resistant glass for added durability.",
-    "The camera has advanced features such as portrait mode and night mode for stunning photos in any lighting condition.",
-    "The battery charges quickly and supports wireless charging for added convenience.",
-    "The size of the device is perfect for watching videos and playing games.",
-    "The screen has a high resolution for sharp and clear images."
+    # Positive sentences
+    "The battery life on this device is impressive.",
+    "The camera takes stunning photos in low light.",
+    "The screen quality is excellent with vibrant colors.",
+    "The performance of this device is incredibly fast.",
+    "Battery performance is outstanding, lasting all day.",
+    "The camera produces sharp and clear images.",
+    "The screen resolution is top-notch and provides a great viewing experience.",
+    "This device delivers exceptional performance for demanding tasks.",
+    "The battery charges quickly and holds the charge well.",
+    "The camera features various modes that enhance photography.",
+    "The screen size is perfect, providing ample space for content.",
+    "The device handles resource-intensive applications with ease.",
+    "Battery efficiency is one of the standout features.",
+    "The camera autofocus is quick and accurate.",
+    "The screen brightness can be adjusted to suit any environment.",
+    
+    # Negative sentences
+    "The battery drains too quickly and needs frequent charging.",
+    "The camera struggles in low light conditions, resulting in blurry photos.",
+    "The screen has a noticeable color shift when viewed from certain angles.",
+    "The device lags and experiences slowdowns during multitasking.",
+    "Battery life is disappointing, requiring constant recharging.",
 ]
 
 new_text = ' '.join(sentences)
 aspect_list = getAspects(new_text)
-group_aspects = groupAspects(aspect_list)
-print(group_aspects)
+group_aspects = groupAspects(aspect_list, sentences)
+#print(group_aspects)
 
 sentiments = getSentiment(sentences)
-print(embedder(sentences))
+#print(embedder(sentences))
 group_sentences = group_sentiments(sentiments, group_aspects, embedder)
-for label, sentences in group_sentences.items():
-    print(f"{label}:")
-    for sentence in sentences:
-        print(f"  {sentence}")
-
-#print(group_aspects)
+#for label, sentences in group_sentences.items():
+    #print(f"{label}:")
+    #for sentence in sentences:
+        #print(f"  {sentence}")
+#overall_sent_score = extract_positive_probabilities(group_sentences)
+if __name__ == '__main__':
+    overall_sent_score = extract_positive_probabilities(group_sentences)
+    output_json = json.dumps(overall_sent_score)
+    print(output_json)
 #for item in group_sentences:
     #print(item)
 #for sentiment in getSentiment(sentences):
