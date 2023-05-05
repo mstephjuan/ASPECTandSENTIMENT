@@ -8,3 +8,4 @@ tl_ugnayan-ud-test.spacy
 /Aspect-Extraction
 
 .history/
+*.pyc
