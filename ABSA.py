@@ -14,6 +14,7 @@ import numpy as np
 nlp = spacy.load("en_core_web_lg")
 import json
 embed = hub.load("https://tfhub.dev/google/universal-sentence-encoder/4")
+word_model = KeyedVectors.load_word2vec_format("C:\\Users\\kreyg\\OneDrive\\Documents\\word2vec-model\\GoogleNews-vectors-negative300.bin\\GoogleNews-vectors-negative300.bin", binary=True, limit=500000)
 
 # getAspectDescription(text: string) => [{aspect: string, description: string}]
 
@@ -30,7 +31,7 @@ def getAspects(text):
     return aspects
 
 def getSentiment(texts):
-    model = pickle.load(open("C:/Users/acer/Documents/GitHub/ASPECTandSENTIMENT/SentimentModel/bigdatamodelNB.pkl", 'rb'))
+    model = pickle.load(open("C:\\Users\\kreyg\\OneDrive\\Documents\\thesis\\ASPECTandSENTIMENT\\SentimentModel\\bigdatamodelNB.pkl", 'rb'))
 
     aspect_sentiments = []
     for text in texts:
@@ -98,7 +99,7 @@ from collections import Counter
 
 def groupAspects(aspect_list, sentences):
     # Load pre-trained Word2Vec model
-    word_model = KeyedVectors.load_word2vec_format("C:/Users/acer/Desktop/python_sht/GoogleNews-vectors-negative300.bin", binary=True, limit=500000)
+    #word_model = KeyedVectors.load_word2vec_format("C:\\Users\\kreyg\\OneDrive\\Documents\\word2vec-model\\GoogleNews-vectors-negative300.bin\\GoogleNews-vectors-negative300.bin", binary=True, limit=500000)
 
     # Convert aspects to word vectors
     aspect_vectors = [word_model[aspect] for aspect in aspect_list]
