@@ -8,3 +8,5 @@ tl_ugnayan-ud-test.spacy
 /Aspect-Extraction
 
 .history/
+
+__pycache__/
