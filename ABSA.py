@@ -16,6 +16,7 @@ import json
 embed = hub.load("https://tfhub.dev/google/universal-sentence-encoder/4")
 
 # getAspectDescription(text: string) => [{aspect: string, description: string}]
+# em
 
 def getAspects(text):
     aspects = []
