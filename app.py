@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, send_from_directory
+from flask import Flask, jsonify, send_from_directory, request
 import json
 from flask_cors import CORS
 from ABSA import (
@@ -45,7 +45,7 @@ def aspects():
 
     absa = getABSA(sentences)
 
-    return jsonify(absa)
+    return jsonify(absa), 200, {'Content-Type': 'application/json'}
 
 
 # @app.route('/aspects')
@@ -70,6 +70,28 @@ def aspects():
 #     sentiments = getSentiment(sentences)
 #     return jsonify(sentiments)
 
+
+# Just like the aspects route, but with a POST request that accepts a JSON body
+@app.route('/extract-aspects', methods=['POST'])
+def extract_aspects():
+    '''Extract aspects from a list of sentences
+    API Specification:
+    Format: {"sentences": ["sentence1", "sentence2", ...]}
+    Example Input: {"sentences": ["The battery life on this device is impressive.", "The camera takes stunning photos in low light."]}
+    
+    Parameters:
+        JSON (str): A JSON object with a list of sentences
+
+    Returns:
+        JSON (str): A JSON object with a summary of the aspects and sentiment score
+    '''
+    if request.method == 'POST':
+        data = request.json
+        sentences = data['sentences']
+        absa = getABSA(sentences)
+        return jsonify(absa), 200, {'Content-Type': 'application/json'}
+    
+    return 'This is the Extract Aspects endpoint. Send a POST request with a list of sentences to extract aspects.'
 
 # Serve files from the static directory
 # /static/templates/index.html
