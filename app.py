@@ -1,10 +1,12 @@
 from flask import Flask, jsonify
 import json
+from flask_cors import CORS
 from ABSA import (
     getABSA
 )
 
 app = Flask(__name__)
+CORS(app)
 
 # Routes and views go here
 @app.route('/')
@@ -41,7 +43,9 @@ def aspects():
     "Battery life is disappointing, requiring constant recharging.",
 ]
 
-    return getABSA(sentences)
+    absa = getABSA(sentences)
+
+    return jsonify(absa)
 
 
 # @app.route('/aspects')
