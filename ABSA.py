@@ -20,28 +20,28 @@ embed = hub.load("https://tfhub.dev/google/universal-sentence-encoder/4")
 
 # sentences = [
 #     # Positive sentences
-#     "The battery life on this device is impressive.",
-#     "The camera takes stunning photos in low light.",
-#     "The screen quality is excellent with vibrant colors.",
-#     "The performance of this device is incredibly fast.",
-#     "Battery performance is outstanding, lasting all day.",
-#     "The camera produces sharp and clear images.",
-#     "The screen resolution is top-notch and provides a great viewing experience.",
-#     "This device delivers exceptional performance for demanding tasks.",
-#     "The battery charges quickly and holds the charge well.",
-#     "The camera features various modes that enhance photography.",
-#     "The screen size is perfect, providing ample space for content.",
-#     "The device handles resource-intensive applications with ease.",
-#     "Battery efficiency is one of the standout features.",
-#     "The camera autofocus is quick and accurate.",
-#     "The screen brightness can be adjusted to suit any environment.",
+    # "The battery life on this device is impressive.",
+    # "The camera takes stunning photos in low light.",
+    # "The screen quality is excellent with vibrant colors.",
+    # "The performance of this device is incredibly fast.",
+    # "Battery performance is outstanding, lasting all day.",
+    # "The camera produces sharp and clear images.",
+    # "The screen resolution is top-notch and provides a great viewing experience.",
+    # "This device delivers exceptional performance for demanding tasks.",
+    # "The battery charges quickly and holds the charge well.",
+    # "The camera features various modes that enhance photography.",
+    # "The screen size is perfect, providing ample space for content.",
+    # "The device handles resource-intensive applications with ease.",
+    # "Battery efficiency is one of the standout features.",
+    # "The camera autofocus is quick and accurate.",
+    # "The screen brightness can be adjusted to suit any environment.",
     
-#     # Negative sentences
-#     "The battery drains too quickly and needs frequent charging.",
-#     "The camera struggles in low light conditions, resulting in blurry photos.",
-#     "The screen has a noticeable color shift when viewed from certain angles.",
-#     "The device lags and experiences slowdowns during multitasking.",
-#     "Battery life is disappointing, requiring constant recharging.",
+    # # Negative sentences
+    # "The battery drains too quickly and needs frequent charging.",
+    # "The camera struggles in low light conditions, resulting in blurry photos.",
+    # "The screen has a noticeable color shift when viewed from certain angles.",
+    # "The device lags and experiences slowdowns during multitasking.",
+    # "Battery life is disappointing, requiring constant recharging.",
 # ]
 
 # TRANSLATED TO ENGLISH
@@ -153,7 +153,12 @@ def groupAspects(aspect_list, sentences):
     #word_model = KeyedVectors.load_word2vec_format("Aspect-Extraction/GoogleNews-vectors-negative300.bin", binary=True, limit=500000)
 
     # Convert aspects to word vectors
-    aspect_vectors = [word_model[aspect] for aspect in aspect_list]
+    aspect_vectors = []
+    for aspect in aspect_list:
+        if aspect in word_model:
+            aspect_vectors.append(word_model[aspect])
+        else:
+            print(f"Warning: Aspect '{aspect}' not in vocabulary.")
 
     # Cluster word vectors using k-means
     kmeans = KMeans(n_clusters=4)
@@ -165,7 +170,10 @@ def groupAspects(aspect_list, sentences):
     grouped_aspects = {}
     #used_aspects = set()
     for i in range(kmeans.n_clusters):
-        cluster_aspects = set(aspect_list[j] for j in range(len(aspect_list)) if clusters[j] == i)
+        cluster_aspects = set()
+        for j in range(len(aspect_list)):
+            if j < len(clusters) and clusters[j] == i:
+                cluster_aspects.add(aspect_list[j])
         aspect_counts = Counter([aspect for sentence in sentences for aspect in cluster_aspects if aspect in sentence])
         most_common_aspect = aspect_counts.most_common(1)[0][0]
         labels.append(most_common_aspect)
