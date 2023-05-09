@@ -9,3 +9,5 @@ tl_ugnayan-ud-test.spacy
 
 .history/
 /venv
+
+/__pycache__
