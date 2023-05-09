@@ -1,12 +1,7 @@
 from flask import Flask, jsonify
 import json
 from ABSA import (
-    getAspects,
-    getSentiment,
-    groupAspects,
-    group_sentiments,
-    extract_positive_probabilities,
-    embedder,
+    getABSA
 )
 
 app = Flask(__name__)
@@ -18,6 +13,7 @@ def index():
 
 
 @app.route('/aspects')
+
 def aspects():
     sentences = [
     # Positive sentences
@@ -43,22 +39,9 @@ def aspects():
     "The screen has a noticeable color shift when viewed from certain angles.",
     "The device lags and experiences slowdowns during multitasking.",
     "Battery life is disappointing, requiring constant recharging.",
-    ]
+]
 
-    # Call the necessary functions
-    new_text = ' '.join(sentences)
-    aspect_list = getAspects(new_text)
-    group_aspects = groupAspects(aspect_list, sentences)
-
-
-    sentiments = getSentiment(sentences)
-    
-    group_sentences = group_sentiments(sentiments, group_aspects, embedder)
-
-    overall_sent_score = extract_positive_probabilities(group_sentences)
-    output_json = json.dumps(overall_sent_score)
-    
-    return output_json
+    return getABSA(sentences)
 
 
 # @app.route('/aspects')
