@@ -1,4 +1,4 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, send_from_directory
 import json
 from flask_cors import CORS
 from ABSA import (
@@ -69,6 +69,13 @@ def aspects():
 #     # Call the necessary functions
 #     sentiments = getSentiment(sentences)
 #     return jsonify(sentiments)
+
+
+# Serve files from the static directory
+# /static/templates/index.html
+@app.route('/static/templates/<path:path>')
+def serve_static(path):
+    return send_from_directory('static/templates', path)
 
 
 if __name__ == '__main__':

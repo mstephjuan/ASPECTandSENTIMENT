@@ -18,30 +18,54 @@ embed = hub.load("https://tfhub.dev/google/universal-sentence-encoder/4")
 
 # getAspectDescription(text: string) => [{aspect: string, description: string}]
 
-sentences = [
-    # Positive sentences
-    "The battery life on this device is impressive.",
-    "The camera takes stunning photos in low light.",
-    "The screen quality is excellent with vibrant colors.",
-    "The performance of this device is incredibly fast.",
-    "Battery performance is outstanding, lasting all day.",
-    "The camera produces sharp and clear images.",
-    "The screen resolution is top-notch and provides a great viewing experience.",
-    "This device delivers exceptional performance for demanding tasks.",
-    "The battery charges quickly and holds the charge well.",
-    "The camera features various modes that enhance photography.",
-    "The screen size is perfect, providing ample space for content.",
-    "The device handles resource-intensive applications with ease.",
-    "Battery efficiency is one of the standout features.",
-    "The camera autofocus is quick and accurate.",
-    "The screen brightness can be adjusted to suit any environment.",
+# sentences = [
+#     # Positive sentences
+#     "The battery life on this device is impressive.",
+#     "The camera takes stunning photos in low light.",
+#     "The screen quality is excellent with vibrant colors.",
+#     "The performance of this device is incredibly fast.",
+#     "Battery performance is outstanding, lasting all day.",
+#     "The camera produces sharp and clear images.",
+#     "The screen resolution is top-notch and provides a great viewing experience.",
+#     "This device delivers exceptional performance for demanding tasks.",
+#     "The battery charges quickly and holds the charge well.",
+#     "The camera features various modes that enhance photography.",
+#     "The screen size is perfect, providing ample space for content.",
+#     "The device handles resource-intensive applications with ease.",
+#     "Battery efficiency is one of the standout features.",
+#     "The camera autofocus is quick and accurate.",
+#     "The screen brightness can be adjusted to suit any environment.",
     
-    # Negative sentences
-    "The battery drains too quickly and needs frequent charging.",
-    "The camera struggles in low light conditions, resulting in blurry photos.",
-    "The screen has a noticeable color shift when viewed from certain angles.",
-    "The device lags and experiences slowdowns during multitasking.",
-    "Battery life is disappointing, requiring constant recharging.",
+#     # Negative sentences
+#     "The battery drains too quickly and needs frequent charging.",
+#     "The camera struggles in low light conditions, resulting in blurry photos.",
+#     "The screen has a noticeable color shift when viewed from certain angles.",
+#     "The device lags and experiences slowdowns during multitasking.",
+#     "Battery life is disappointing, requiring constant recharging.",
+# ]
+
+# TRANSLATED TO ENGLISH
+sentences = [
+    """Effectiveness: long lasting
+Fragrance: long lasting like the original scent
+Fast delivery, only 1 day, deliver immediately, the seller also ships quickly. Smells good and doesn't go away quickly. The smell really clings to the skin. I hope the next time there's a freebie. I'll order again. 5 stars.""",
+"""Effectiveness: very effective it last longer
+Fragrance: smell really good
+Texture: Original feels
+recieved the parcel in good condition, great qualitybfor its price!!! thank you shopee,seller qnd the kind courrier as well. god bless you all. thanks for the freebie""",
+"""Effectiveness: Stay Longer
+Fragrance: Good
+Texture: Nice
+It smells so bad, thanks seller for your fast shipping. I will order again when it runs out.""",
+"""Effectiveness: long lasting, even when I get home at night it still smells good
+Fragrance: the smell is smooth, a great winner for the price
+Texture: the bottle is nice, the former is premium""",
+"""The fragrance is really long lasting. You won't regret it, it's worth it. It really smells like original scents. More sales at the net seller. It's still very smart. Thank you.""",
+"""Its really good perfume, the smell so good, good nice to smell, the packaging was good. I give 5 stars for this product. Thank you shopee and seller.""",
+"""Effectiveness: 10/10
+Fragrance: 10/10
+Amoy all day long. The scent stuck to my clothes""",
+"""Fragrance: super scent""",
 ]
 
 def getAspects(text):
@@ -57,7 +81,7 @@ def getAspects(text):
     return aspects
 
 def getSentiment(texts):
-    model = pickle.load(open("SentimentModel/bigdata2modelNB.pkl", 'rb'))
+    model = pickle.load(open("SentimentModel\modelNB.pkl", 'rb'))
 
     aspect_sentiments = []
     for text in texts:
@@ -125,7 +149,7 @@ from collections import Counter
 
 def groupAspects(aspect_list, sentences):
     # Load pre-trained Word2Vec model
-    word_model = KeyedVectors.load_word2vec_format("C:\\Users\\kreyg\\OneDrive\\Documents\\word2vec-model\\GoogleNews-vectors-negative300.bin\\GoogleNews-vectors-negative300.bin", binary=True, limit=500000)
+    word_model = KeyedVectors.load_word2vec_format("Aspect-Extraction\GoogleNews-vectors-negative300.bin", binary=True, limit=500000)
     #word_model = KeyedVectors.load_word2vec_format("Aspect-Extraction/GoogleNews-vectors-negative300.bin", binary=True, limit=500000)
 
     # Convert aspects to word vectors

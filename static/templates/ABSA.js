@@ -34,22 +34,21 @@ fetch('http://127.0.0.1:5000/aspects')
     const bars = svg.selectAll(".bar")
         .data(barData)
         .enter()
-        .append("g")
-        .attr("class", "bar-group")
-        .attr("transform", d => `translate(0, ${yScale(d.key)})`);
-    
-    bars.append("rect")
+        .append("rect")
         .attr("class", "bar")
+        .attr("y", d => yScale(d.key))
         .attr("width", d => xScale(d.value))
-        .attr("height", yScale.bandwidth())
-        .attr("fill", "steelblue");
-    
-    bars.append("text")
-        .attr("class", "legend")
-        .attr("x", d => xScale(d.value) + 5)
-        .attr("y", yScale.bandwidth() / 2)
+        .attr("height", yScale.bandwidth());
+    const labels = svg.selectAll(".label")
+        .data(barData)
+        .enter()
+        .append("text")
+        .attr("class", "label")
+        .attr("x", d => xScale(d.value))
+        .attr("y", d => yScale(d.key) + yScale.bandwidth() / 2)
+        .attr("dx", "0.3em")
         .attr("dy", "0.35em")
-        .text(d => `${d.key} (${d.value.toFixed(2)})`);
+        .text(d => d.value.toFixed(2));
     bars.attr("fill", "steelblue");
     labels.attr("fill", "black")
           .attr("text-anchor", "start");
