@@ -5,15 +5,15 @@ from bs4 import BeautifulSoup
 from nltk.corpus import stopwords
 from nltk.stem.porter import PorterStemmer
 import pickle
-import tensorflow_hub as hub
 from gensim.models import KeyedVectors
 from sklearn.cluster import KMeans
 from scipy.spatial.distance import cdist
+from collections import Counter
 #from sentence_transformers import SentenceTransformer
 import numpy as np
 nlp = spacy.load("en_core_web_lg")
 import json
-embed = hub.load("https://tfhub.dev/google/universal-sentence-encoder/4")
+#embed = hub.load("https://tfhub.dev/google/universal-sentence-encoder/4")
 #word_model = KeyedVectors.load_word2vec_format("C:\\Users\\kreyg\\OneDrive\\Documents\\word2vec-model\\GoogleNews-vectors-negative300.bin\\GoogleNews-vectors-negative300.bin", binary=True, limit=500000)
 
 # getAspectDescription(text: string) => [{aspect: string, description: string}]
@@ -68,8 +68,9 @@ Amoy all day long. The scent stuck to my clothes""",
 """Fragrance: super scent""",
 ]
 
-def getAspects(text):
-    aspects = []
+def getAspects(sentences):
+    aspects = set()  # Use a set instead of a list
+    text = ''.join(sentences)
     doc = nlp(text)
     for sent in doc.sents:
         target = []
@@ -77,13 +78,12 @@ def getAspects(text):
             if (token.dep_ == 'nsubj' or token.dep_ == 'dobj') and token.pos_ == 'NOUN' and token.ent_type_ == '':
                 target.append(token.text)
         if target:
-            aspects.extend(target)
-    return aspects
+            aspects.update(target)  # Use the update() method of set to add elements without duplicates
+    return list(aspects) 
 
 def getSentiment(texts):
-    model = pickle.load(open("SentimentModel\modelNB.pkl", 'rb'))
-
-    aspect_sentiments = []
+    model = pickle.load(open("SentimentModel/bigdata2modelNB.pkl", 'rb'))
+    sentence_sentiments = []
     for text in texts:
         """
         function getSentiment(raw_text: string) -> (output: string, prediction: (polarity, subjectivity))
@@ -137,15 +137,23 @@ def getSentiment(texts):
         if pred == 1:
             output = "Negative"
         else:
-            output = "Postive"
+            output = "Positive"
     
-        aspect_sentiments.append([text, output, positive_prob])
+        sentence_sentiments.append([text, output])
 
-    return aspect_sentiments
+    return sentence_sentiments
     #return output, positive_prob
 
-
-from collections import Counter
+def mapSentences(sentences):
+    aspects = getAspects(sentences)
+    #sentiments = getSentiment(sentences)
+    groups = {aspect: [] for aspect in aspects}
+    for sentence in sentences:
+        sentence_aspects = getAspects([sentence])
+        sentiment = getSentiment([sentence])
+        for aspect in sentence_aspects:
+            groups[aspect].append(sentiment)
+    return groups
 
 def groupAspects(aspect_list, sentences):
     # Load pre-trained Word2Vec model
@@ -168,7 +176,6 @@ def groupAspects(aspect_list, sentences):
     # Find representative label for each cluster
     labels = []
     grouped_aspects = {}
-    #used_aspects = set()
     for i in range(kmeans.n_clusters):
         cluster_aspects = set()
         for j in range(len(aspect_list)):
@@ -176,59 +183,55 @@ def groupAspects(aspect_list, sentences):
                 cluster_aspects.add(aspect_list[j])
         aspect_counts = Counter([aspect for sentence in sentences for aspect in cluster_aspects if aspect in sentence])
         most_common_aspect = aspect_counts.most_common(1)[0][0]
-        labels.append(most_common_aspect)
-        grouped_aspects[most_common_aspect] = cluster_aspects
+        if len(cluster_aspects) >= 2:
+            labels.append(most_common_aspect)
+            grouped_aspects[most_common_aspect] = cluster_aspects
     return grouped_aspects
 
-from sklearn.metrics.pairwise import cosine_similarity
 
-def group_sentiments(aspect_sentiments, grouped_aspects, embedder):
-    result = {}
-    used_sentences = set()
-    for label in grouped_aspects.keys():
-        result[label] = []
-        label_embedding = embedder([label])[0]
-        for text, output, positive_prob in aspect_sentiments:
-            if text not in used_sentences:
-                text_embedding = embedder([text])[0]
-                similarity = cosine_similarity(text_embedding.reshape(1,-1), label_embedding.reshape(1,-1))
-                if similarity > 0.14:
-                    result[label].append((text, output, positive_prob))
-                    used_sentences.add(text)
-    return result
+def createAspectSentimentDict(groupedAspects, sentenceMaps):
+    mapScores = {}
+    for aspect_label, aspects in groupedAspects.items():
+        mapScores[aspect_label] = {aspect: ", ".join(map(str, sentiment)) for aspect, sentiment in sentenceMaps.items() if aspect in aspects}
+    return mapScores
 
-def extract_positive_probabilities(result):
+def getOverallSentiment(result):
     new_dict = {}
-    for label, values in result.items():
-        scores = [positive_prob for text, output, positive_prob in values]
-        if len(scores) > 0:
-            sentiment_score = sum(scores) / len(scores)
+    for aspect_label, sentiment_dict in result.items():
+        positive_sentiment = 0
+        negative_sentiment = 0
+        for aspect, sentiment in sentiment_dict.items():
+            if 'positive' in sentiment.lower():
+                positive_sentiment += 1
+            elif 'negative' in sentiment.lower():
+                negative_sentiment += 1
+        total_sentiment = positive_sentiment + negative_sentiment
+        if total_sentiment > 0:
+            overall_sentiment = positive_sentiment / total_sentiment
         else:
-            sentiment_score = 0
-        new_dict[label] = sentiment_score * 100
+            overall_sentiment = 0
+        new_dict[aspect_label] = {'pos-count': positive_sentiment, 'neg-count': negative_sentiment, 'overall-sentiment': overall_sentiment}
     return new_dict
-def embedder(texts):
-    return embed(texts).numpy()
+
+
 
 def getABSA(sentences):
     new_text = ' '.join(sentences)
     aspect_list = getAspects(new_text)
     group_aspects = groupAspects(aspect_list, sentences)
-    #print(group_aspects)
+    print(group_aspects)
+    return group_aspects
 
-    sentiments = getSentiment(sentences)
-    #print(embedder(sentences))
-    group_sentences = group_sentiments(sentiments, group_aspects, embedder)
-    #for label, sentences in group_sentences.items():
-    #print(f"{label}:")
-    #for sentence in sentences:
-        #print(f"  {sentence}")
-    #overall_sent_score = extract_positive_probabilities(group_sentences)
-    overall_sent_score = extract_positive_probabilities(group_sentences)
-    output_json = json.dumps(overall_sent_score)
-    return output_json
-#for item in group_sentences:
-    #print(item)
-#for sentiment in getSentiment(sentences):
-    #positive_prob = sentiment[2]
-    #print(type(positive_prob))
+#print(getAspects(sentences))
+my_aspects = getAspects(sentences)
+#my_groupedAspects = groupAspects(my_aspects, sentences)
+#group = mapSentences(sentences)
+my_dict = createAspectSentimentDict(groupAspects(my_aspects,sentences), mapSentences(sentences))
+#for aspect_label, nested_dict in my_dict.items():
+    #print(aspect_label + ":")
+    #for aspect, sentiment in nested_dict.items():
+        #print("  {} -> \n   {}".format(aspect, sentiment))
+    #print()
+
+print(json.dumps(getOverallSentiment(my_dict), indent=1))
+
