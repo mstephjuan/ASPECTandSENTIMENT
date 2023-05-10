@@ -15,7 +15,6 @@ def index():
 
 
 @app.route('/aspects')
-
 def aspects():
     sentences = [
     # Positive sentences
@@ -43,9 +42,16 @@ def aspects():
     "Battery life is disappointing, requiring constant recharging.",
 ]
 
+    # Sample output of getABSA
+    # {'screen': {'environment', 'charging', 'experience', 'applications', 'space', 'screen', 'efficiency', 'life', 'modes', 'charge', 'resolution', 'quality', 'shift', 'tasks', 'size', 'slowdowns', 'performance'}, 'camera': {'photos', 'camera', 'photography', 'images'}, 'device': {'recharging', 'device', 'battery'}}
+    # {'aspect-group1': {aspect1, aspect2, ...}, 'aspect-group2': {aspect3, aspect4, ...}, ...}
     absa = getABSA(sentences)
 
-    return jsonify(absa), 200, {'Content-Type': 'application/json'}
+    # Convert set to list for JSON serialization
+    for key in absa:
+        absa[key] = list(absa[key])
+
+    return json.dumps(absa)
 
 
 # @app.route('/aspects')
@@ -88,10 +94,19 @@ def extract_aspects():
     if request.method == 'POST':
         data = request.json
         sentences = data['sentences']
+        # Sample output of getABSA
+        # {'screen': {'environment', 'charging', 'experience', 'applications', 'space', 'screen', 'efficiency', 'life', 'modes', 'charge', 'resolution', 'quality', 'shift', 'tasks', 'size', 'slowdowns', 'performance'}, 'camera': {'photos', 'camera', 'photography', 'images'}, 'device': {'recharging', 'device', 'battery'}}
+        # {'aspect-group1': {aspect1, aspect2, ...}, 'aspect-group2': {aspect3, aspect4, ...}, ...}
         absa = getABSA(sentences)
-        return jsonify(absa), 200, {'Content-Type': 'application/json'}
+
+        # Convert set to list for JSON serialization
+        for key in absa:
+            absa[key] = list(absa[key])
+
+        return json.dumps(absa)
     
     return 'This is the Extract Aspects endpoint. Send a POST request with a list of sentences to extract aspects.'
+
 
 # Serve files from the static directory
 # /static/templates/index.html
