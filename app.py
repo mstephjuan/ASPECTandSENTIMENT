@@ -2,11 +2,13 @@ from flask import Flask, jsonify, send_from_directory, request
 import json
 from flask_cors import CORS
 from ABSA import (
-    getABSA
+    getABSA,
+    getSentiment
 )
 
 app = Flask(__name__)
-CORS(app)
+# Allow requests from http://localhost:4200 to all endpoints in your Flask app. You can customize this according to your needs.
+CORS(app, resources={r"/*": {"origins": "http://localhost:4200"}})
 
 # Routes and views go here
 @app.route('/')
@@ -91,6 +93,14 @@ def extract_aspects():
     Returns:
         JSON (str): A JSON object with a summary of the aspects and sentiment score
     '''
+    # OPTIONS request is sent by the browser to check if the server allows the request
+    # If the server does not allow the request, the browser will not send the POST request
+    # This is a CORS (Cross-Origin Resource Sharing) preflight request
+    # Accept json type
+    if request.method == 'OPTIONS':
+        print("OPTIONS accessed")
+        return 'This is the Extract Aspects endpoint. Send a POST request with a list of sentences to extract aspects.'
+    
     if request.method == 'POST':
         data = request.json
         sentences = data['sentences']
@@ -104,6 +114,42 @@ def extract_aspects():
             absa[key] = list(absa[key])
 
         return json.dumps(absa)
+    
+    return 'This is the Extract Aspects endpoint. Send a POST request with a list of sentences to extract aspects.'
+
+
+@app.route('/sentiment', methods=['POST'])
+def sentiment():
+    '''Extract sentiment from a sentence
+    API Specification:
+    Format: {"sentence": string}
+    Example Input: {"sentence": "The battery life on this device is impressive."}
+    
+    Parameters:
+        JSON (str): A JSON object with a "sentence" as key and the sentence as value
+
+    Returns:
+        JSON (str): A JSON object with "sentence" key and a list containing 2 values - the sentence text and the sentiment classification
+    '''
+    # OPTIONS request is sent by the browser to check if the server allows the request
+    # If the server does not allow the request, the browser will not send the POST request
+    # This is a CORS (Cross-Origin Resource Sharing) preflight request
+    # Accept json type
+    print("LOADING SENTMENT ROUTE")
+    if request.method == 'OPTIONS':
+        print("OPTIONS accessed")
+        return 'This is the Extract Aspects endpoint. Send a POST request with a list of sentences to extract aspects.'
+    
+    if request.method == 'POST':
+        data = request.json
+        sentences = data['sentence']
+        # Sample output of getABSA
+        # {'screen': {'environment', 'charging', 'experience', 'applications', 'space', 'screen', 'efficiency', 'life', 'modes', 'charge', 'resolution', 'quality', 'shift', 'tasks', 'size', 'slowdowns', 'performance'}, 'camera': {'photos', 'camera', 'photography', 'images'}, 'device': {'recharging', 'device', 'battery'}}
+        # {'aspect-group1': {aspect1, aspect2, ...}, 'aspect-group2': {aspect3, aspect4, ...}, ...}
+        sentiment = getSentiment([sentences])
+        print(sentiment)
+
+        return json.dumps(sentiment)
     
     return 'This is the Extract Aspects endpoint. Send a POST request with a list of sentences to extract aspects.'
 
