@@ -184,22 +184,24 @@ def getOverallSentiment(result):
 
 
 def getABSA(sentences):
-    new_text = ' '.join(sentences)
-    aspect_list = getAspects(new_text)
-    group_aspects = groupAspects(aspect_list, sentences)
-    print(group_aspects)
-    return group_aspects
+    my_aspects = getAspects(sentences)
+    my_groupedAspects = groupAspects(my_aspects, sentences)
+    my_dict = createAspectSentimentDict(my_groupedAspects, mapSentences(sentences))
+    sent_score = getOverallSentiment(my_dict)
+    return sent_score
+
+print(getABSA(sentences))
 
 #print(getAspects(sentences))
-my_aspects = getAspects(sentences)
+#my_aspects = getAspects(sentences)
 #my_groupedAspects = groupAspects(my_aspects, sentences)
 #group = mapSentences(sentences)
-my_dict = createAspectSentimentDict(groupAspects(my_aspects,sentences), mapSentences(sentences))
+#my_dict = createAspectSentimentDict(groupAspects(my_aspects,sentences), mapSentences(sentences))
 #for aspect_label, nested_dict in my_dict.items():
     #print(aspect_label + ":")
     #for aspect, sentiment in nested_dict.items():
         #print("  {} -> \n   {}".format(aspect, sentiment))
     #print()
 
-print(json.dumps(getOverallSentiment(my_dict), indent=1))
+#print(json.dumps(getOverallSentiment(my_dict), indent=1))
 
