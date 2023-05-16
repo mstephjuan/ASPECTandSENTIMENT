@@ -1,4 +1,5 @@
-from flask import Flask, jsonify, send_from_directory, request
+from urllib.parse import unquote
+from flask import Flask, jsonify, request, Response, send_from_directory
 import json
 from flask_cors import CORS
 from ABSA import (
@@ -15,6 +16,17 @@ CORS(app, resources={r"/*": {"origins": "http://localhost:4200"}})
 def index():
     return "Hello"
 
+@app.route('/data', methods=['POST'])
+def handle_review():
+    review_text = request.json.get('reviewText')
+    # process the review_text here
+
+    # create a dictionary to return as JSON
+    response_data = {'message': review_text}
+    print(response_data)
+
+    # return the response as JSON
+    return jsonify(response_data)
 
 @app.route('/aspects')
 def aspects():
@@ -49,11 +61,14 @@ def aspects():
     # {'aspect-group1': {aspect1, aspect2, ...}, 'aspect-group2': {aspect3, aspect4, ...}, ...}
     absa = getABSA(sentences)
 
-    # Convert set to list for JSON serialization
-    for key in absa:
-        absa[key] = list(absa[key])
+    # # Convert set to list for JSON serialization
+    # for key in absa:
+    #     absa[key] = list(absa[key])
 
-    return json.dumps(absa)
+    # return json.dumps(absa)
+
+ 
+    return jsonify(absa)
 
 
 # @app.route('/aspects')
@@ -162,4 +177,4 @@ def serve_static(path):
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='localhost', port=5000)
