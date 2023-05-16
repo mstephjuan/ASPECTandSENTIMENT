@@ -58,7 +58,7 @@ def getAspects(sentences):
     return list(aspects) 
 
 def getSentiment(texts):
-    model = pickle.load(open("SentimentModel/bigdata2modelNB.pkl", 'rb'))
+    model = pickle.load(open("C:\\Users\\kreyg\OneDrive\\Documents\\thesis\\ASPECTandSENTIMENT\\SentimentModel\\modelCraig.pkl", 'rb'))
     sentence_sentiments = []
     for text in texts:
         """
@@ -177,7 +177,7 @@ def getOverallSentiment(result):
         if total_sentiment > 0:
             overall_sentiment = positive_sentiment / total_sentiment
         else:
-            overall_sentiment = 0
+            overall_sentiment = positive_sentiment / total_sentiment
         new_dict[aspect_label] = {'pos-count': positive_sentiment, 'neg-count': negative_sentiment, 'overall-sentiment': overall_sentiment}
     return new_dict
 
@@ -190,18 +190,19 @@ def getABSA(sentences):
     sent_score = getOverallSentiment(my_dict)
     return sent_score
 
-print(getABSA(sentences))
+#print(getABSA(sentences))
 
 #print(getAspects(sentences))
-#my_aspects = getAspects(sentences)
-#my_groupedAspects = groupAspects(my_aspects, sentences)
-#group = mapSentences(sentences)
-#my_dict = createAspectSentimentDict(groupAspects(my_aspects,sentences), mapSentences(sentences))
-#for aspect_label, nested_dict in my_dict.items():
-    #print(aspect_label + ":")
-    #for aspect, sentiment in nested_dict.items():
-        #print("  {} -> \n   {}".format(aspect, sentiment))
-    #print()
+my_aspects = getAspects(sentences)
+my_groupedAspects = groupAspects(my_aspects, sentences)
+group = mapSentences(sentences)
+my_dict = createAspectSentimentDict(groupAspects(my_aspects,sentences), mapSentences(sentences))
+for aspect_label, nested_dict in my_dict.items():
+    print(aspect_label + ":")
+    for aspect, sentiment in nested_dict.items():
+        print("  {} -> \n   {}".format(aspect, sentiment))
+    print()
 
-#print(json.dumps(getOverallSentiment(my_dict), indent=1))
+print()
+print(json.dumps(getOverallSentiment(my_dict), indent=1))
 
