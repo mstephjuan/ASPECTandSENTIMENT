@@ -30,6 +30,12 @@ def handle_review():
 
 @app.route('/aspects')
 def aspects():
+    """
+    This API endpoint returns the aspect-based sentiment analysis (ABSA) of a list of sentences.
+    
+    :return: A JSON object containing the ABSA of the sentences.
+    :rtype: dict
+    """
     sentences = [
     # Positive sentences
     "The battery life on this device is impressive.",
@@ -57,17 +63,24 @@ def aspects():
 ]
 
     # Sample output of getABSA
-    # {'screen': {'environment', 'charging', 'experience', 'applications', 'space', 'screen', 'efficiency', 'life', 'modes', 'charge', 'resolution', 'quality', 'shift', 'tasks', 'size', 'slowdowns', 'performance'}, 'camera': {'photos', 'camera', 'photography', 'images'}, 'device': {'recharging', 'device', 'battery'}}
-    # {'aspect-group1': {aspect1, aspect2, ...}, 'aspect-group2': {aspect3, aspect4, ...}, ...}
+    # {
+    #     "device": {
+    #         "neg-count": 2,
+    #         "overall-sentiment": 0.75,
+    #         "pos-count": 6
+    #     },
+    #     "life": {
+    #         "neg-count": 5,
+    #         "overall-sentiment": 0.5,
+    #         "pos-count": 5
+    #     },
+    #     "performance": {
+    #         "neg-count": 2,
+    #         "overall-sentiment": 0.6666666666666666,
+    #         "pos-count": 4
+    #     }
+    # }
     absa = getABSA(sentences)
-
-    # # Convert set to list for JSON serialization
-    # for key in absa:
-    #     absa[key] = list(absa[key])
-
-    # return json.dumps(absa)
-
- 
     return jsonify(absa)
 
 
@@ -97,7 +110,9 @@ def aspects():
 # Just like the aspects route, but with a POST request that accepts a JSON body
 @app.route('/extract-aspects', methods=['POST'])
 def extract_aspects():
-    '''Extract aspects from a list of sentences
+    '''
+    Extract aspects from a list of sentences
+    
     API Specification:
     Format: {"sentences": ["sentence1", "sentence2", ...]}
     Example Input: {"sentences": ["The battery life on this device is impressive.", "The camera takes stunning photos in low light."]}
@@ -107,6 +122,25 @@ def extract_aspects():
 
     Returns:
         JSON (str): A JSON object with a summary of the aspects and sentiment score
+
+    Sample output:
+    {
+        "device": {
+            "neg-count": 2,
+            "overall-sentiment": 0.75,
+            "pos-count": 6
+        },
+        "life": {
+            "neg-count": 5,
+            "overall-sentiment": 0.5,
+            "pos-count": 5
+        },
+        "performance": {
+            "neg-count": 2,
+            "overall-sentiment": 0.6666666666666666,
+            "pos-count": 4
+        }
+    }
     '''
     # OPTIONS request is sent by the browser to check if the server allows the request
     # If the server does not allow the request, the browser will not send the POST request
@@ -119,33 +153,15 @@ def extract_aspects():
     if request.method == 'POST':
         data = request.json
         sentences = data['sentences']
-        # Sample output of getABSA
-        # {'screen': {'environment', 'charging', 'experience', 'applications', 'space', 'screen', 'efficiency', 'life', 'modes', 'charge', 'resolution', 'quality', 'shift', 'tasks', 'size', 'slowdowns', 'performance'}, 'camera': {'photos', 'camera', 'photography', 'images'}, 'device': {'recharging', 'device', 'battery'}}
-        # {'aspect-group1': {aspect1, aspect2, ...}, 'aspect-group2': {aspect3, aspect4, ...}, ...}
         absa = getABSA(sentences)
-
-        # Convert set to list for JSON serialization
-        for key in absa:
-            absa[key] = list(absa[key])
-
-        return json.dumps(absa)
+        return jsonify(absa)
     
     return 'This is the Extract Aspects endpoint. Send a POST request with a list of sentences to extract aspects.'
 
 
 @app.route('/sentiment', methods=['POST'])
 def sentiment():
-    '''Extract sentiment from a sentence
-    API Specification:
-    Format: {"sentence": string}
-    Example Input: {"sentence": "The battery life on this device is impressive."}
-    
-    Parameters:
-        JSON (str): A JSON object with a "sentence" as key and the sentence as value
 
-    Returns:
-        JSON (str): A JSON object with "sentence" key and a list containing 2 values - the sentence text and the sentiment classification
-    '''
     # OPTIONS request is sent by the browser to check if the server allows the request
     # If the server does not allow the request, the browser will not send the POST request
     # This is a CORS (Cross-Origin Resource Sharing) preflight request
