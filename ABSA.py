@@ -106,7 +106,7 @@ def getSentiment(texts):
         p_stemmer = PorterStemmer()
 
         # Remove HTML
-        review_text = BeautifulSoup(text).get_text()
+        review_text = BeautifulSoup(text, features="html.parser").get_text()
 
         # Remove non-letters
         letters_only = re.sub("[^a-zA-Z]", " ", review_text)
@@ -169,7 +169,7 @@ def groupAspects(aspect_list, sentences):
             print(f"Warning: Aspect '{aspect}' not in vocabulary.")
 
     # Cluster word vectors using k-means
-    kmeans = KMeans(n_clusters=4)
+    kmeans = KMeans(n_clusters=4, n_init='auto')
     kmeans.fit(aspect_vectors)
     clusters = kmeans.predict(aspect_vectors)
 
