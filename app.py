@@ -177,7 +177,7 @@ def sentiment():
         # Sample output of getABSA
         # {'screen': {'environment', 'charging', 'experience', 'applications', 'space', 'screen', 'efficiency', 'life', 'modes', 'charge', 'resolution', 'quality', 'shift', 'tasks', 'size', 'slowdowns', 'performance'}, 'camera': {'photos', 'camera', 'photography', 'images'}, 'device': {'recharging', 'device', 'battery'}}
         # {'aspect-group1': {aspect1, aspect2, ...}, 'aspect-group2': {aspect3, aspect4, ...}, ...}
-        sentiment = getSentiment([sentences])
+        sentiment = getSentiment(sentences)
         print(sentiment)
 
         return json.dumps(sentiment)
