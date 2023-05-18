@@ -157,7 +157,7 @@ def mapSentences(sentences):
 
 def groupAspects(aspect_list, sentences):
     # Load pre-trained Word2Vec model
-    word_model = KeyedVectors.load_word2vec_format("Aspect-Extraction\GoogleNews-vectors-negative300.bin", binary=True, limit=500000)
+    word_model = KeyedVectors.load_word2vec_format("Aspect-Extraction/GoogleNews-vectors-negative300.bin", binary=True, limit=500000)
     #word_model = KeyedVectors.load_word2vec_format("Aspect-Extraction/GoogleNews-vectors-negative300.bin", binary=True, limit=500000)
 
     # Convert aspects to word vectors
