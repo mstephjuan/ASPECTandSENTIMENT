@@ -181,7 +181,20 @@ def getOverallSentiment(result):
         new_dict[aspect_label] = {'pos-count': positive_sentiment, 'neg-count': negative_sentiment, 'overall-sentiment': overall_sentiment}
     return new_dict
 
-
+def listSentences(texts):
+    text_list = {}
+    pos_list = {}
+    neg_list = {}
+    aspect_sent_dict = createAspectSentimentDict(groupAspects(getAspects(texts), texts), mapSentences(texts))
+    for aspect_label, nested_dict in aspect_sent_dict.items():
+        for aspect, sentiment in nested_dict.items():
+            if 'positive' in sentiment.lower():
+                pos_list[aspect] = sentiment
+            elif 'negative' in sentiment.lower():
+                neg_list[aspect] = sentiment
+    text_list[aspect_label] = {'pos': pos_list, 'neg': neg_list}
+    return text_list
+        
 
 def getABSA(sentences):
     my_aspects = getAspects(sentences)
@@ -193,18 +206,18 @@ def getABSA(sentences):
 #print(getABSA(sentences))
 
 #print(getAspects(sentences))
-my_aspects = getAspects(sentences)
-my_groupedAspects = groupAspects(my_aspects, sentences)
-group = mapSentences(sentences)
-my_dict = createAspectSentimentDict(groupAspects(my_aspects,sentences), mapSentences(sentences))
-for aspect_label, nested_dict in my_dict.items():
-    print(aspect_label + ":")
-    for aspect, sentiment in nested_dict.items():
-        print("  {} -> \n   {}".format(aspect, sentiment))
-    print()
+# my_aspects = getAspects(sentences)
+# my_groupedAspects = groupAspects(my_aspects, sentences)
+# group = mapSentences(sentences)
+# my_dict = createAspectSentimentDict(groupAspects(my_aspects,sentences), mapSentences(sentences))
+# for aspect_label, nested_dict in my_dict.items():
+#     print(aspect_label + ":")
+#     for aspect, sentiment in nested_dict.items():
+#         print("  {} -> \n   {}".format(aspect, sentiment))
+#     print()
 
-print()
-print(json.dumps(getOverallSentiment(my_dict), indent=1))
+#print()
+#print(json.dumps(getOverallSentiment(my_dict), indent=1))
 
 
 
