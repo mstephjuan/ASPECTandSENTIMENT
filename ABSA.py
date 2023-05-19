@@ -177,7 +177,7 @@ def getOverallSentiment(result):
         if total_sentiment > 0:
             overall_sentiment = positive_sentiment / total_sentiment
         else:
-            overall_sentiment = positive_sentiment / total_sentiment
+            overall_sentiment = -1 * (negative_sentiment / total_sentiment)
         new_dict[aspect_label] = {'pos-count': positive_sentiment, 'neg-count': negative_sentiment, 'overall-sentiment': overall_sentiment}
     return new_dict
 
@@ -205,4 +205,6 @@ for aspect_label, nested_dict in my_dict.items():
 
 print()
 print(json.dumps(getOverallSentiment(my_dict), indent=1))
+
+
 
