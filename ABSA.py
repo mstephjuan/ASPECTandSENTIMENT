@@ -44,6 +44,30 @@ sentences = [
     "Battery life is disappointing, requiring constant recharging.",
 ]
 
+# # TRANSLATED TO ENGLISH
+# sentences = [
+#     """Effectiveness: long lasting
+# Fragrance: long lasting like the original scent
+# Fast delivery, only 1 day, deliver immediately, the seller also ships quickly. Smells good and doesn't go away quickly. The smell really clings to the skin. I hope the next time there's a freebie. I'll order again. 5 stars.""",
+# """Effectiveness: very effective it last longer
+# Fragrance: smell really good
+# Texture: Original feels
+# recieved the parcel in good condition, great qualitybfor its price!!! thank you shopee,seller qnd the kind courrier as well. god bless you all. thanks for the freebie""",
+# """Effectiveness: Stay Longer
+# Fragrance: Good
+# Texture: Nice
+# It smells so bad, thanks seller for your fast shipping. I will order again when it runs out.""",
+# """Effectiveness: long lasting, even when I get home at night it still smells good
+# Fragrance: the smell is smooth, a great winner for the price
+# Texture: the bottle is nice, the former is premium""",
+# """The fragrance is really long lasting. You won't regret it, it's worth it. It really smells like original scents. More sales at the net seller. It's still very smart. Thank you.""",
+# """Its really good perfume, the smell so good, good nice to smell, the packaging was good. I give 5 stars for this product. Thank you shopee and seller.""",
+# """Effectiveness: 10/10
+# Fragrance: 10/10
+# Amoy all day long. The scent stuck to my clothes""",
+# """Fragrance: super scent""",
+# ]
+
 def getAspects(sentences):
     aspects = set()  # Use a set instead of a list
     text = ''.join(sentences)
@@ -58,7 +82,7 @@ def getAspects(sentences):
     return list(aspects) 
 
 def getSentiment(texts):
-    model = pickle.load(open("C:\\Users\\kreyg\OneDrive\\Documents\\thesis\\ASPECTandSENTIMENT\\SentimentModel\\modelCraig.pkl", 'rb'))
+    model = pickle.load(open("SentimentModel/modelCraig.pkl", 'rb'))
     sentence_sentiments = []
     for text in texts:
         """
@@ -82,7 +106,7 @@ def getSentiment(texts):
         p_stemmer = PorterStemmer()
 
         # Remove HTML
-        review_text = BeautifulSoup(text).get_text()
+        review_text = BeautifulSoup(text, features="html.parser").get_text()
 
         # Remove non-letters
         letters_only = re.sub("[^a-zA-Z]", " ", review_text)
@@ -133,14 +157,19 @@ def mapSentences(sentences):
 
 def groupAspects(aspect_list, sentences):
     # Load pre-trained Word2Vec model
-    word_model = KeyedVectors.load_word2vec_format("C:\\Users\\kreyg\\OneDrive\\Documents\\word2vec-model\\GoogleNews-vectors-negative300.bin\\GoogleNews-vectors-negative300.bin", binary=True, limit=500000)
+    word_model = KeyedVectors.load_word2vec_format("Aspect-Extraction/GoogleNews-vectors-negative300.bin", binary=True, limit=500000)
     #word_model = KeyedVectors.load_word2vec_format("Aspect-Extraction/GoogleNews-vectors-negative300.bin", binary=True, limit=500000)
 
     # Convert aspects to word vectors
-    aspect_vectors = [word_model[aspect] for aspect in aspect_list]
+    aspect_vectors = []
+    for aspect in aspect_list:
+        if aspect in word_model:
+            aspect_vectors.append(word_model[aspect])
+        else:
+            print(f"Warning: Aspect '{aspect}' not in vocabulary.")
 
     # Cluster word vectors using k-means
-    kmeans = KMeans(n_clusters=4)
+    kmeans = KMeans(n_clusters=4, n_init='auto')
     kmeans.fit(aspect_vectors)
     clusters = kmeans.predict(aspect_vectors)
 
@@ -148,7 +177,10 @@ def groupAspects(aspect_list, sentences):
     labels = []
     grouped_aspects = {}
     for i in range(kmeans.n_clusters):
-        cluster_aspects = set(aspect_list[j] for j in range(len(aspect_list)) if clusters[j] == i)
+        cluster_aspects = set()
+        for j in range(len(aspect_list)):
+            if j < len(clusters) and clusters[j] == i:
+                cluster_aspects.add(aspect_list[j])
         aspect_counts = Counter([aspect for sentence in sentences for aspect in cluster_aspects if aspect in sentence])
         most_common_aspect = aspect_counts.most_common(1)[0][0]
         if len(cluster_aspects) >= 2:

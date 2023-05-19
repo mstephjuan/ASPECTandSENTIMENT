@@ -8,12 +8,13 @@ from sklearn.pipeline import Pipeline
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.naive_bayes import MultinomialNB
+from sklearn.metrics import classification_report, accuracy_score, confusion_matrix
 import pickle
 
 from sklearn.svm import SVC, LinearSVC
 
 # Read the clean dataset
-reviews = pd.read_csv('C:\\Users\\kreyg\\OneDrive\\Documents\\thesis\\ASPECTandSENTIMENT\\SentimentModel\\clean_train.csv')
+reviews = pd.read_csv('SentimentModel/clean_train.csv')
 
 X = reviews['content_stem']
 y = reviews['target']
@@ -185,5 +186,5 @@ print('')
 cmat(y_val, voting_pred, 'validation set')
 print('Saving model to disk')
 # Saving model to disk
-pickle.dump(voting_clf, open('C:\\Users\\kreyg\\OneDrive\\Documents\\thesis\\ASPECTandSENTIMENT\\SentimentModel\\modelCraig.pkl','wb'))
+pickle.dump(voting_clf, open('SentimentModel/modelCraig.pkl','wb'))
 
