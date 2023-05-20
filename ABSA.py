@@ -157,7 +157,7 @@ def mapSentences(sentences):
 
 def groupAspects(aspect_list, sentences):
     # Load pre-trained Word2Vec model
-    word_model = KeyedVectors.load_word2vec_format("Aspect-Extraction/GoogleNews-vectors-negative300.bin", binary=True, limit=500000)
+    word_model = KeyedVectors.load_word2vec_format("C:\\Users\\kreyg\\OneDrive\\Documents\\word2vec-model\\GoogleNews-vectors-negative300.bin\\GoogleNews-vectors-negative300.bin", binary=True, limit=1000000)
     #word_model = KeyedVectors.load_word2vec_format("Aspect-Extraction/GoogleNews-vectors-negative300.bin", binary=True, limit=500000)
 
     # Convert aspects to word vectors
@@ -209,23 +209,24 @@ def getOverallSentiment(result):
         if total_sentiment > 0:
             overall_sentiment = positive_sentiment / total_sentiment
         else:
-            overall_sentiment = -1 * (negative_sentiment / total_sentiment)
+            overall_sentiment = 0
         new_dict[aspect_label] = {'pos-count': positive_sentiment, 'neg-count': negative_sentiment, 'overall-sentiment': overall_sentiment}
     return new_dict
 
 def listSentences(texts):
     text_list = {}
-    pos_list = {}
-    neg_list = {}
     aspect_sent_dict = createAspectSentimentDict(groupAspects(getAspects(texts), texts), mapSentences(texts))
     for aspect_label, nested_dict in aspect_sent_dict.items():
+        pos_list = []
+        neg_list = []
         for aspect, sentiment in nested_dict.items():
             if 'positive' in sentiment.lower():
-                pos_list[aspect] = sentiment
+                pos_list.append(sentiment)
             elif 'negative' in sentiment.lower():
-                neg_list[aspect] = sentiment
-    text_list[aspect_label] = {'pos': pos_list, 'neg': neg_list}
+                neg_list.append(sentiment)
+        text_list[aspect_label] = {'pos': pos_list, 'neg': neg_list}
     return text_list
+
         
 
 def getABSA(sentences):
@@ -235,8 +236,10 @@ def getABSA(sentences):
     sent_score = getOverallSentiment(my_dict)
     return sent_score
 
-#print(getABSA(sentences))
-
+# print(getSentiment(sentences))
+print(getABSA(sentences))
+print()
+print(json.dumps(listSentences(sentences), indent=1))
 #print(getAspects(sentences))
 # my_aspects = getAspects(sentences)
 # my_groupedAspects = groupAspects(my_aspects, sentences)
