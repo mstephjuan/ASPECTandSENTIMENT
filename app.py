@@ -5,7 +5,7 @@ from flask_cors import CORS
 from ABSA import (
     getABSA,
     getSentiment,
-    listSentences
+    listSentences as processSentences  # Renamed the imported function
 )
 
 app = Flask(__name__)
@@ -186,14 +186,15 @@ def sentiment():
     return 'This is the Extract Aspects endpoint. Send a POST request with a list of sentences to extract aspects.'
 
 @app.route('/listsentences', methods=['POST'])
-def listSentences(data):
+def listSentencesEndpoint():
     if request.method == 'OPTIONS':
         print("OPTIONS accessed")
         return 'This is the Aspect Label Sentences endpoint. Send a POST request with a list of aspect labels with corresponding positive and negative sentences.'
-    
+
     if request.method == 'POST':
         data = request.json
-        groupSentences = listSentences(data)
+        sentences = data['sentences']
+        groupSentences = processSentences(sentences)  # Call the renamed imported function
         return jsonify(groupSentences)
 
 
