@@ -6,6 +6,7 @@ from ABSA import (
     createAspectSentimentDict,
     getABSA,
     getSentiment,
+    listSentences as processSentences,  # Renamed the imported function,
     getAspects,
     groupAspects,
     mapSentences
@@ -184,6 +185,19 @@ def sentiment():
         return json.dumps(sentiment)
     
     return 'This is the Extract Aspects endpoint. Send a POST request with a list of sentences to extract aspects.'
+
+
+@app.route('/listsentences', methods=['POST'])
+def listSentencesEndpoint():
+    if request.method == 'OPTIONS':
+        print("OPTIONS accessed")
+        return 'This is the Aspect Label Sentences endpoint. Send a POST request with a list of aspect labels with corresponding positive and negative sentences.'
+
+    if request.method == 'POST':
+        data = request.json
+        sentences = data['sentences']
+        groupSentences = processSentences(sentences)  # Call the renamed imported function
+        return jsonify(groupSentences)
 
 
 @app.route('/absa-extract', methods=['POST'])

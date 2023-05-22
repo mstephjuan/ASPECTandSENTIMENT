@@ -40,7 +40,7 @@ pipe_tvec_nb_params = {
 # Instantiate GridSearchCV
 gs_tvec_nb = GridSearchCV(pipe_tvec_nb, # Objects to optimise
                         param_grid = pipe_tvec_nb_params, # Hyperparameters for tuning
-                        cv=8) # 10-fold cross validation
+                        cv=6) # 10-fold cross validation
 
 # Fit model on to training data
 gs_tvec_nb.fit(X_train, y_train)
@@ -72,7 +72,6 @@ print('')
 # Print classification report and confusion matrix
 cmat(y_val, gs_tvec_nb_pred, 'validation set')
 
-
 print('Creating TFIDF SVC Model')
 # Create a pipeline with TF-IDF Vectorizer and SVC
 pipe_tvec_svc = Pipeline([
@@ -82,7 +81,7 @@ pipe_tvec_svc = Pipeline([
 
 # Search over the following values of hyperparameters:
 pipe_tvec_svc_params = {
-    'tvec__max_features': [800], #200,500
+    'tvec__max_features': [500], #200,500
     'tvec__min_df': [2,3], 
     'tvec__max_df': [.9,.95], 
     'linearsvc__C': [.1]
@@ -91,7 +90,7 @@ pipe_tvec_svc_params = {
 # Instantiate GridSearchCV
 gs_tvec_svc = GridSearchCV(pipe_tvec_svc, # Objects to optimise
                           param_grid = pipe_tvec_svc_params, # Hyperparameters for tuning
-                          cv=8) # 10-fold cross validation
+                          cv=6) # 10-fold cross validation
 
 # Fit model on to training data
 gs_tvec_svc.fit(X_train, y_train)
@@ -130,7 +129,7 @@ pipe_tvec_lr = Pipeline([
 
 # Search over the following values of hyperparameters:
 pipe_tvec_lr_params = {
-    'tvec__max_features': [300], #100,200
+    'tvec__max_features': [200], #100,200
     'tvec__min_df': [2,3], #2,3 
     'tvec__max_df': [.9,.95], 
 #     'tvec__ngram_range':[(1,1),(1,2)],  
