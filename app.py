@@ -3,8 +3,12 @@ from flask import Flask, jsonify, request, Response, send_from_directory
 import json
 from flask_cors import CORS
 from ABSA import (
+    createAspectSentimentDict,
     getABSA,
-    getSentiment
+    getSentiment,
+    getAspects,
+    groupAspects,
+    mapSentences
 )
 
 app = Flask(__name__)
@@ -23,7 +27,6 @@ def handle_review():
 
     # create a dictionary to return as JSON
     response_data = {'message': review_text}
-    print(response_data)
 
     # return the response as JSON
     return jsonify(response_data)
@@ -166,7 +169,6 @@ def sentiment():
     # If the server does not allow the request, the browser will not send the POST request
     # This is a CORS (Cross-Origin Resource Sharing) preflight request
     # Accept json type
-    print("LOADING SENTMENT ROUTE")
     if request.method == 'OPTIONS':
         print("OPTIONS accessed")
         return 'This is the Extract Aspects endpoint. Send a POST request with a list of sentences to extract aspects.'
@@ -178,9 +180,110 @@ def sentiment():
         # {'screen': {'environment', 'charging', 'experience', 'applications', 'space', 'screen', 'efficiency', 'life', 'modes', 'charge', 'resolution', 'quality', 'shift', 'tasks', 'size', 'slowdowns', 'performance'}, 'camera': {'photos', 'camera', 'photography', 'images'}, 'device': {'recharging', 'device', 'battery'}}
         # {'aspect-group1': {aspect1, aspect2, ...}, 'aspect-group2': {aspect3, aspect4, ...}, ...}
         sentiment = getSentiment(sentences)
-        print(sentiment)
 
         return json.dumps(sentiment)
+    
+    return 'This is the Extract Aspects endpoint. Send a POST request with a list of sentences to extract aspects.'
+
+
+@app.route('/absa-extract', methods=['POST'])
+def absa_extract():
+
+    # OPTIONS request is sent by the browser to check if the server allows the request
+    # If the server does not allow the request, the browser will not send the POST request
+    # This is a CORS (Cross-Origin Resource Sharing) preflight request
+    # Accept json type
+    if request.method == 'OPTIONS':
+        print("OPTIONS accessed")
+        return 'This is the Extract Aspects endpoint. Send a POST request with a list of sentences to extract aspects.'
+    
+    if request.method == 'POST':
+        data = request.json
+        sentences = data['sentences']
+
+        result = {}
+
+        my_aspects = getAspects(sentences)
+        my_groupedAspects = groupAspects(my_aspects, sentences)
+        group = mapSentences(sentences)
+        my_dict = createAspectSentimentDict(groupAspects(my_aspects,sentences), mapSentences(sentences))
+        for aspect_label, nested_dict in my_dict.items():
+            result[aspect_label] = {}
+            for aspect, sentiment in nested_dict.items():
+                # insert aspect and sentiment to the aspect_label key in result dictionary
+                result[aspect_label][aspect] = sentiment
+
+        return json.dumps(result)
+    
+    return 'This is the Extract Aspects endpoint. Send a POST request with a list of sentences to extract aspects.'
+
+
+@app.route('/get-aspects', methods=['POST'])
+def get_aspects():
+
+    # OPTIONS request is sent by the browser to check if the server allows the request
+    # If the server does not allow the request, the browser will not send the POST request
+    # This is a CORS (Cross-Origin Resource Sharing) preflight request
+    # Accept json type
+    if request.method == 'OPTIONS':
+        print("OPTIONS accessed")
+        return 'This is the Extract Aspects endpoint. Send a POST request with a list of sentences to extract aspects.'
+    
+    if request.method == 'POST':
+        data = request.json
+        sentences = data['sentences']
+        result = getAspects(sentences)
+
+        return json.dumps(result)
+    
+    return 'This is the Extract Aspects endpoint. Send a POST request with a list of sentences to extract aspects.'
+
+
+
+@app.route('/map-sentences', methods=['POST'])
+def map_sentences():
+
+    # OPTIONS request is sent by the browser to check if the server allows the request
+    # If the server does not allow the request, the browser will not send the POST request
+    # This is a CORS (Cross-Origin Resource Sharing) preflight request
+    # Accept json type
+    if request.method == 'OPTIONS':
+        print("OPTIONS accessed")
+        return 'This is the Extract Aspects endpoint. Send a POST request with a list of sentences to extract aspects.'
+    
+    if request.method == 'POST':
+        data = request.json
+        sentences = data['sentences']
+        result = mapSentences(sentences)
+
+        return json.dumps(result)
+    
+    return 'This is the Extract Aspects endpoint. Send a POST request with a list of sentences to extract aspects.'
+
+
+
+@app.route('/group-aspects', methods=['POST'])
+def group_aspects():
+
+    # OPTIONS request is sent by the browser to check if the server allows the request
+    # If the server does not allow the request, the browser will not send the POST request
+    # This is a CORS (Cross-Origin Resource Sharing) preflight request
+    # Accept json type
+    if request.method == 'OPTIONS':
+        print("OPTIONS accessed")
+        return 'This is the Extract Aspects endpoint. Send a POST request with a list of sentences to extract aspects.'
+    
+    if request.method == 'POST':
+        data = request.json
+        print(data)
+        sentences = data['sentences']
+        aspect_list = data['aspect_list']
+        result = groupAspects(aspect_list, sentences)
+
+        # Convert the set to a list
+        result = list(result)
+
+        return json.dumps(result)
     
     return 'This is the Extract Aspects endpoint. Send a POST request with a list of sentences to extract aspects.'
 
