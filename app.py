@@ -11,7 +11,8 @@ from ABSA import (
     groupAspects,
     mapSentences,
     getListSentences,
-    getCountSentiments
+    getCountSentiments,
+    countSentiments
 )
 
 app = Flask(__name__)
@@ -343,6 +344,38 @@ def count_sentiments():
     
     return 'This is the Extract Aspects endpoint. Send a POST request with a list of sentences to extract aspects.'
 
+
+# Combined for optimization
+@app.route('/init-dashboard', methods=['POST'])
+def init_dashboard():
+    # OPTIONS request is sent by the browser to check if the server allows the request
+    # If the server does not allow the request, the browser will not send the POST request
+    # This is a CORS (Cross-Origin Resource Sharing) preflight request
+    # Accept json type
+    if request.method == 'OPTIONS':
+        print("OPTIONS accessed")
+        return 'This is the Extract Aspects endpoint. Send a POST request with a list of sentences to extract aspects.'
+    
+    if request.method == 'POST':
+        data = request.json
+        sentences = data['sentences']
+
+        my_aspects = getAspects(sentences)
+        my_groupedAspects = groupAspects(my_aspects, sentences)
+
+        my_dict = createAspectSentimentDict(my_groupedAspects, mapSentences(sentences))
+        get_list_sentences = processSentences(mapSentences(sentences), my_groupedAspects)
+        get_count_sentiments = countSentiments(mapSentences(sentences), my_groupedAspects)
+
+        result = {
+            "get_absa": my_dict,
+            "get_list_sentences": get_list_sentences,
+            "get_count_sentiments": get_count_sentiments
+        }
+
+        return json.dumps(result)
+    
+    return 'This is the Extract Aspects endpoint. Send a POST request with a list of sentences to extract aspects.'
 
 
 # Serve files from the static directory
