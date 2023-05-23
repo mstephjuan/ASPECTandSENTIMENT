@@ -9,7 +9,9 @@ from ABSA import (
     listSentences as processSentences,  # Renamed the imported function,
     getAspects,
     groupAspects,
-    mapSentences
+    mapSentences,
+    getListSentences,
+    getCountSentiments
 )
 
 app = Flask(__name__)
@@ -300,6 +302,47 @@ def group_aspects():
         return json.dumps(result)
     
     return 'This is the Extract Aspects endpoint. Send a POST request with a list of sentences to extract aspects.'
+
+
+@app.route('/list-sentences', methods=['POST'])
+def list_sentences():
+    # OPTIONS request is sent by the browser to check if the server allows the request
+    # If the server does not allow the request, the browser will not send the POST request
+    # This is a CORS (Cross-Origin Resource Sharing) preflight request
+    # Accept json type
+    if request.method == 'OPTIONS':
+        print("OPTIONS accessed")
+        return 'This is the Extract Aspects endpoint. Send a POST request with a list of sentences to extract aspects.'
+    
+    if request.method == 'POST':
+        data = request.json
+        sentences = data['sentences']
+        result = getListSentences(sentences)
+
+        return json.dumps(result)
+    
+    return 'This is the Extract Aspects endpoint. Send a POST request with a list of sentences to extract aspects.'
+
+
+@app.route('/count-sentiments', methods=['POST'])
+def count_sentiments():
+    # OPTIONS request is sent by the browser to check if the server allows the request
+    # If the server does not allow the request, the browser will not send the POST request
+    # This is a CORS (Cross-Origin Resource Sharing) preflight request
+    # Accept json type
+    if request.method == 'OPTIONS':
+        print("OPTIONS accessed")
+        return 'This is the Extract Aspects endpoint. Send a POST request with a list of sentences to extract aspects.'
+    
+    if request.method == 'POST':
+        data = request.json
+        sentences = data['sentences']
+        result = getCountSentiments(sentences)
+
+        return json.dumps(result)
+    
+    return 'This is the Extract Aspects endpoint. Send a POST request with a list of sentences to extract aspects.'
+
 
 
 # Serve files from the static directory
