@@ -169,7 +169,7 @@ def groupAspects(aspect_list, sentences):
             print(f"Warning: Aspect '{aspect}' not in vocabulary.")
 
     # Cluster word vectors using k-means
-    kmeans = KMeans(n_clusters=4, n_init='auto')
+    kmeans = KMeans(n_clusters=4, n_init=10, random_state=7)
     kmeans.fit(aspect_vectors)
     clusters = kmeans.predict(aspect_vectors)
 
