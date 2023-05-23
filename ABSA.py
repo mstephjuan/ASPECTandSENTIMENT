@@ -19,29 +19,17 @@ import json
 # getAspectDescription(text: string) => [{aspect: string, description: string}]
 
 sentences = [
-    # Positive sentences
-    "The battery life on this device is impressive.",
-    "The camera takes stunning photos in low light.",
-    "The screen quality is excellent with vibrant colors.",
-    "The performance of this device is incredibly fast.",
-    "Battery performance is outstanding, lasting all day.",
-    "The camera produces sharp and clear images.",
-    "The screen resolution is top-notch and provides a great viewing experience.",
-    "This device delivers exceptional performance for demanding tasks.",
-    "The battery charges quickly and holds the charge well.",
-    "The camera features various modes that enhance photography.",
-    "The screen size is perfect, providing ample space for content.",
-    "The device handles resource-intensive applications with ease.",
-    "Battery efficiency is one of the standout features.",
-    "The camera autofocus is quick and accurate.",
-    "The screen brightness can be adjusted to suit any environment.",
-    
-    # Negative sentences
-    "The battery drains too quickly and needs frequent charging.",
-    "The camera struggles in low light conditions, resulting in blurry photos.",
-    "The screen has a noticeable color shift when viewed from certain angles.",
-    "The device lags and experiences slowdowns during multitasking.",
-    "Battery life is disappointing, requiring constant recharging.",
+    # Mixed positive and negative
+    "It works well, but sometimes the unit just turns off while in use for no reason. I make sure the unit is charged so its not that. The sound quality is fair but nothing to get excited about. ",
+    "The product seems to work as intended and is operating very well but it got a bit glitchy when it was first used but after a couple of minutes it worked pretty much fine after that.",
+    "the package is ok but the item it self didn't really meet my expectation, there's a glitching sounds I heard while playing a music and I don't know if the earphones were built like this or somethin",
+    "Works fine. The sound quality is okay. But the battery life is not that good in terms of talk time. At 100'%' charge, it always runs out of battery at the end of my hour-long meetings.",
+    "fast delivery, but the both earphones has different volume, kinda fast to get empty, i love the design, but my biggest problem is when i try to close it ig the magnet is not the strong, overall its fine...",
+    "I ordered it yesterday and received it today. it got wet from the rain but thankfully it didn't damage the item. the touch activated sensors do not work but maybe it's because I'm using it on an Android",
+    "It's been 2 weeks since I started using this. Sound is good. Audio is clear. And I was impressed by the durability. Because I have accidentally dropped this 3x already yet until now it still functions really well. And I love that! Thank you!",
+    "Delivery was so fast, I even thought I was scammed! The box is somwhat lightweight so I thought nothing was in it. even took a video for proof. Haha! But, lo and behold! The item is so beautiful! I delayed the review for a day to test the item and, I was not disappointed! The sound was quite good and crisp considering it's price. I haven't tried it outside yet but, I hope it delivers. Overall, delivery fast. Item, superb (as of now, hopefully, in the long run too!) Will definitely order again next time!",
+    "The case hinge easily broke so i had to put a tape to serve as a hinge. Sound quality is muffled. The treble is dead. The connection easily interrupted and disconnects / reconnects shortly even when your phone is near you.  For its price, its definitely cheap and so is the quality. The audio prompt is in Chinese.",
+    "JUNK!!!!! DON'T BUY THIS!!!!!!!  I JUST HAD IT YESTERDAY AND IT'S ALREADY SKIPPING SOUNDS. WASTE OF MY MONEY"
 ]
 
 # # TRANSLATED TO ENGLISH
@@ -69,17 +57,27 @@ sentences = [
 # ]
 
 def getAspects(sentences):
-    aspects = set()  # Use a set instead of a list
-    text = ''.join(sentences)
-    doc = nlp(text)
-    for sent in doc.sents:
-        target = []
-        for token in sent:
-            if (token.dep_ == 'nsubj' or token.dep_ == 'dobj') and token.pos_ == 'NOUN' and token.ent_type_ == '':
-                target.append(token.text)
-        if target:
-            aspects.update(target)  # Use the update() method of set to add elements without duplicates
-    return list(aspects) 
+    aspects = set()
+    p_stemmer = PorterStemmer()
+
+    for sentence in sentences:
+        review_text = BeautifulSoup(sentence, features="html.parser").get_text()
+        letters_only = re.sub("[^a-zA-Z]", " ", review_text)
+        words = letters_only.lower().split()
+        stops = set(stopwords.words('english'))
+        stops.update(['app', 'shopee', 'shoppee', 'item', 'items', 'seller', 'sellers', 'bad', 'thank', 'thanks', 'delivery', 'package'])
+        meaningful_words = [w for w in words if w not in stops]
+        # meaningful_words = [p_stemmer.stem(w) for w in meaningful_words]
+        final_text = " ".join(meaningful_words)
+        doc = nlp(final_text)
+        for sent in doc.sents:
+            target = []
+            for token in sent:
+                if (token.dep_ == 'nsubj' or token.dep_ == 'dobj') and token.pos_ == 'NOUN' and token.ent_type_ == '':
+                    target.append(token.text)
+            if target:
+                aspects.update(target)
+    return list(aspects)
 
 def getSentiment(texts):
     model = pickle.load(open("SentimentModel/modelCraig.pkl", 'rb'))
@@ -118,7 +116,7 @@ def getSentiment(texts):
         stops = set(stopwords.words('english'))
 
         # Adding on stopwords that were appearing frequently in both positive and negative reviews
-        stops.update(['app','shopee','shoppee','item','items','seller','sellers','bad'])
+        stops.update(['app','shopee','shoppee','item','items','seller','sellers','bad', 'thank', 'thanks', 'delivery', 'package'])
 
         # Remove stopwords
         meaningful_words = [w for w in words if w not in stops]
@@ -131,15 +129,19 @@ def getSentiment(texts):
 
         # Generate predictions
         pred = model.predict(final_text)[0]
-        positive_prob = model.predict_proba([pd.Series.to_string(final_text)])[0][0]
+        proba = model.predict_proba([pd.Series.to_string(final_text)])[0]
 
+        positive_prob = proba[0]
+        negative_prob = proba[1]
+
+        overall_prob = positive_prob - negative_prob
 
         if pred == 1:
             output = "Negative"
         else:
             output = "Positive"
     
-        sentence_sentiments.append([text, output])
+        sentence_sentiments.append([text, output, overall_prob])
 
     return sentence_sentiments
     #return output, positive_prob
@@ -157,7 +159,7 @@ def mapSentences(sentences):
 
 def groupAspects(aspect_list, sentences):
     # Load pre-trained Word2Vec model
-    word_model = KeyedVectors.load_word2vec_format("Aspect-Extraction/GoogleNews-vectors-negative300.bin", binary=True, limit=1000000)
+    word_model = KeyedVectors.load_word2vec_format("C:\\Users\\kreyg\\OneDrive\\Documents\\word2vec-model\\GoogleNews-vectors-negative300.bin\\GoogleNews-vectors-negative300.bin", binary=True, limit=1000000)
     #word_model = KeyedVectors.load_word2vec_format("Aspect-Extraction/GoogleNews-vectors-negative300.bin", binary=True, limit=500000)
 
     # Convert aspects to word vectors
@@ -169,7 +171,7 @@ def groupAspects(aspect_list, sentences):
             print(f"Warning: Aspect '{aspect}' not in vocabulary.")
 
     # Cluster word vectors using k-means
-    kmeans = KMeans(n_clusters=4, n_init=10, random_state=7)
+    kmeans = KMeans(n_clusters=4, n_init=30, random_state=42)
     kmeans.fit(aspect_vectors)
     clusters = kmeans.predict(aspect_vectors)
 
@@ -192,39 +194,76 @@ def groupAspects(aspect_list, sentences):
 def createAspectSentimentDict(groupedAspects, sentenceMaps):
     mapScores = {}
     for aspect_label, aspects in groupedAspects.items():
-        mapScores[aspect_label] = {aspect: ", ".join(map(str, sentiment)) for aspect, sentiment in sentenceMaps.items() if aspect in aspects}
+        aspect_scores = []
+        for aspect, sentiment in sentenceMaps.items():
+            if aspect in aspects:
+                overall_probs = [sentence[0][2] for sentence in sentiment]
+                aspect_scores.extend(overall_probs)
+        if aspect_scores:
+            avg_score = sum(aspect_scores) / len(aspect_scores)
+            sentiment_label = interpretSentimentScore(avg_score)
+            mapScores[aspect_label] = {
+                # 'sentiment_scores': aspect_scores,
+                'average_score': avg_score,
+                'sentiment_label': sentiment_label
+            }
     return mapScores
 
-def getOverallSentiment(result):
-    new_dict = {}
-    for aspect_label, sentiment_dict in result.items():
-        positive_sentiment = 0
-        negative_sentiment = 0
-        for aspect, sentiment in sentiment_dict.items():
-            if 'positive' in sentiment.lower():
-                positive_sentiment += 1
-            elif 'negative' in sentiment.lower():
-                negative_sentiment += 1
-        total_sentiment = positive_sentiment + negative_sentiment
-        if total_sentiment > 0:
-            overall_sentiment = positive_sentiment / total_sentiment
-        else:
-            overall_sentiment = 0
-        new_dict[aspect_label] = {'pos-count': positive_sentiment, 'neg-count': negative_sentiment, 'overall-sentiment': overall_sentiment}
-    return new_dict
+def interpretSentimentScore(score):
+    if score > 0.2:
+        return 'Positive'
+    elif score < -0.2:
+        return 'Negative'
+    else:
+        return 'Neutral'
 
-def listSentences(texts):
+def countSentiments(sentence_maps, grouped_aspects):
+    count_dict = {}
+    for aspect_label, aspects in grouped_aspects.items():
+        count_dict[aspect_label] = {}
+        for aspect, sentiment_list in sentence_maps.items():
+            if aspect in aspects:
+                pos_count = 0
+                neg_count = 0
+                count_dict[aspect_label] = {}
+                for sentence in sentiment_list:
+                    if sentence[0][1] == 'Positive':
+                        pos_count += 1
+                    else:
+                        neg_count += 1
+                count_dict[aspect_label] = {'pos-count': pos_count, 'neg-count': neg_count}
+    return count_dict
+# def getOverallSentiment(result):
+#     new_dict = {}
+#     for aspect_label, sentiment_dict in result.items():
+#         positive_sentiment = 0
+#         negative_sentiment = 0
+#         for aspect, sentiment in sentiment_dict.items():
+#             if 'positive' in sentiment.lower():
+#                 positive_sentiment += 1
+#             elif 'negative' in sentiment.lower():
+#                 negative_sentiment += 1
+#         total_sentiment = positive_sentiment + negative_sentiment
+#         if total_sentiment > 0:
+#             overall_sentiment = positive_sentiment / total_sentiment
+#         else:
+#             overall_sentiment = 0
+#         new_dict[aspect_label] = {'pos-count': positive_sentiment, 'neg-count': negative_sentiment, 'overall-sentiment': overall_sentiment}
+#     return new_dict
+
+def listSentences(sentence_maps, grouped_aspects):
     text_list = {}
-    aspect_sent_dict = createAspectSentimentDict(groupAspects(getAspects(texts), texts), mapSentences(texts))
-    for aspect_label, nested_dict in aspect_sent_dict.items():
-        pos_list = []
-        neg_list = []
-        for aspect, sentiment in nested_dict.items():
-            if 'positive' in sentiment.lower():
-                pos_list.append(sentiment)
-            elif 'negative' in sentiment.lower():
-                neg_list.append(sentiment)
-        text_list[aspect_label] = {'pos': pos_list, 'neg': neg_list}
+    for aspect_label, aspects in grouped_aspects.items():
+        text_list[aspect_label] = {'Positive': [], 'Negative': []}
+        for aspect, sentiment_list in sentence_maps.items():
+            if aspect in aspects:
+                for sentiment in sentiment_list:
+                    sentence = sentiment[0][0]
+                    sentiment_label = sentiment[0][1]
+                    if sentiment_label == 'Positive' and sentence not in text_list[aspect_label]['Positive']:
+                        text_list[aspect_label]['Positive'].append(sentence)
+                    elif sentiment_label == 'Negative' and sentence not in text_list[aspect_label]['Negative']:
+                        text_list[aspect_label]['Negative'].append(sentence)
     return text_list
 
         
@@ -233,17 +272,43 @@ def getABSA(sentences):
     my_aspects = getAspects(sentences)
     my_groupedAspects = groupAspects(my_aspects, sentences)
     my_dict = createAspectSentimentDict(my_groupedAspects, mapSentences(sentences))
-    sent_score = getOverallSentiment(my_dict)
-    return sent_score
+    return my_dict
 
-# print(getSentiment(sentences))
-print(getABSA(sentences))
-print()
-print(json.dumps(listSentences(sentences), indent=1))
-#print(getAspects(sentences))
+def getListSentences(sentences):
+    my_aspects = getAspects(sentences)
+    my_groupedAspects = groupAspects(my_aspects, sentences)
+    # my_dict = createAspectSentimentDict(my_groupedAspects, mapSentences(sentences))
+    return listSentences(mapSentences(sentences), my_groupedAspects)
+
+def getCountSentiments(sentences): 
+    my_aspects = getAspects(sentences)
+    my_groupedAspects = groupAspects(my_aspects, sentences)
+    # my_dict = createAspectSentimentDict(my_groupedAspects, mapSentences(sentences))
+    return countSentiments(mapSentences(sentences), my_groupedAspects)
+
+absa = getABSA(sentences)
+list_sen = getListSentences(sentences)
+count_sen = getCountSentiments(sentences)
+
+# for aspect_label, nested_dict in absa.items():
+#     print(aspect_label + ":")
+#     for aspect, sentiment in nested_dict.items():
+#         print("  {} -> \n   {}".format(aspect, sentiment))
+
+print(json.dumps(absa, indent=1))
+print(json.dumps(list_sen, indent=1))
+print(json.dumps(count_sen, indent=1))
+
+
+# print(json.dumps(getSentiment(sentences), indent=1))
+# print(getABSA(sentences))
+# print()
+# print(json.dumps(listSentences(sentences), indent=1))
+# print(getAspects(sentences))
 # my_aspects = getAspects(sentences)
 # my_groupedAspects = groupAspects(my_aspects, sentences)
 # group = mapSentences(sentences)
+# print(json.dumps(group, indent=1))
 # my_dict = createAspectSentimentDict(groupAspects(my_aspects,sentences), mapSentences(sentences))
 # for aspect_label, nested_dict in my_dict.items():
 #     print(aspect_label + ":")
@@ -252,7 +317,7 @@ print(json.dumps(listSentences(sentences), indent=1))
 #     print()
 
 #print()
-#print(json.dumps(getOverallSentiment(my_dict), indent=1))
+# print(json.dumps(getOverallSentiment(my_dict), indent=1))
 
 
 
