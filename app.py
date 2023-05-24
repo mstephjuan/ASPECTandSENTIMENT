@@ -11,7 +11,8 @@ from ABSA import (
     groupAspects,
     mapSentences,
     getListSentences,
-    getCountSentiments
+    getCountSentiments,
+    visualizeAspectSentiment
 )
 
 app = Flask(__name__)
@@ -159,8 +160,9 @@ def extract_aspects():
     if request.method == 'POST':
         data = request.json
         sentences = data['sentences']
-        absa = getABSA(sentences)
-        return jsonify(absa)
+        # absa = getABSA(sentences)
+        count = getCountSentiments(sentences)
+        return jsonify(count)
     
     return 'This is the Extract Aspects endpoint. Send a POST request with a list of sentences to extract aspects.'
 
@@ -187,20 +189,6 @@ def sentiment():
         return json.dumps(sentiment)
     
     return 'This is the Extract Aspects endpoint. Send a POST request with a list of sentences to extract aspects.'
-
-
-@app.route('/listsentences', methods=['POST'])
-def listSentencesEndpoint():
-    if request.method == 'OPTIONS':
-        print("OPTIONS accessed")
-        return 'This is the Aspect Label Sentences endpoint. Send a POST request with a list of aspect labels with corresponding positive and negative sentences.'
-
-    if request.method == 'POST':
-        data = request.json
-        sentences = data['sentences']
-        groupSentences = processSentences(sentences)  # Call the renamed imported function
-        return jsonify(groupSentences)
-
 
 @app.route('/absa-extract', methods=['POST'])
 def absa_extract():
@@ -343,6 +331,25 @@ def count_sentiments():
     
     return 'This is the Extract Aspects endpoint. Send a POST request with a list of sentences to extract aspects.'
 
+@app.route('/visualize', methods=['POST'])
+def visualize():
+    # OPTIONS request is sent by the browser to check if the server allows the request
+    # If the server does not allow the request, the browser will not send the POST request
+    # This is a CORS (Cross-Origin Resource Sharing) preflight request
+    # Accept json type
+    if request.method == 'OPTIONS':
+        print("OPTIONS accessed")
+        return 'This is the Visualize endpoint. Send a POST request with a list of sentences to visualize.'
+    
+    if request.method == 'POST':
+        data = request.json
+        sentences = data['sentences']
+        absa = getABSA(sentences)
+        result = visualizeAspectSentiment(absa)
+
+        return json.dumps(result)
+    
+    return 'This is the Visualize endpoint. Send a POST request with a list of sentences to visualize.'
 
 
 # Serve files from the static directory
