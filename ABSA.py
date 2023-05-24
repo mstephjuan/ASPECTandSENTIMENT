@@ -237,23 +237,25 @@ def countSentiments(sentence_maps, grouped_aspects):
     for aspect_label, aspects in grouped_aspects.items():
         count_dict[aspect_label] = {}
         for aspect, sentiment_list in sentence_maps.items():
-            if aspect in aspects:
-                pos_count = 0
-                neg_count = 0
-                # count_dict[aspect_label] = {}
-                for sentence in sentiment_list:
-                    if sentence[0][1] == 'Positive':
-                        pos_count += 1
+                if aspect in aspects:
+                    # print(f'<\033[96m{aspect_label}\033[0m> <\033[94m{aspect}\033[0m> | Sentiment List => \033[92m {sentiment_list} \033[0m')
+                    pos_count = 0
+                    neg_count = 0
+                    # count_dict[aspect_label] = {}
+                    for sentence in sentiment_list:
+                        if sentence[0][1] == 'Positive':
+                            pos_count += 1
+                        else:
+                            neg_count += 1
+                    total_count = pos_count + neg_count
+                    if total_count > 0:
+                        pos_percent = (pos_count / total_count) * 100
+                        neg_percent = (neg_count / total_count) * 100
                     else:
-                        neg_count += 1
-                total_count = pos_count + neg_count
-                if total_count > 0:
-                    pos_percent = (pos_count / total_count) * 100
-                    neg_percent = (neg_count / total_count) * 100
-                else:
-                    pos_percent = 0
-                    neg_percent = 0
-                count_dict[aspect_label] = {'pos-count': pos_count, 'neg-count': neg_count, 'pos-percent': pos_percent, 'neg-percent': neg_percent}
+                        pos_percent = 0
+                        neg_percent = 0
+                    if aspect == aspect_label:
+                        count_dict[aspect_label] = {'pos-count': pos_count, 'neg-count': neg_count, 'pos-percent': pos_percent, 'neg-percent': neg_percent}
     return count_dict
 # def getOverallSentiment(result):
 #     new_dict = {}
