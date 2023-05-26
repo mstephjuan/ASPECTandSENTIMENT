@@ -370,6 +370,7 @@ def init_dashboard():
         my_aspects = getAspects(sentences)
         my_groupedAspects = groupAspects(my_aspects, sentences)
 
+
         my_dict = createAspectSentimentDict(my_groupedAspects, mapSentences(sentences))
         get_list_sentences = processSentences(mapSentences(sentences), my_groupedAspects)
         get_count_sentiments = countSentiments(mapSentences(sentences), my_groupedAspects)
@@ -377,7 +378,8 @@ def init_dashboard():
         result = {
             "get_absa": my_dict,
             "get_list_sentences": get_list_sentences,
-            "get_count_sentiments": get_count_sentiments
+            "get_count_sentiments": get_count_sentiments,
+            "get_aspect_groups": my_groupedAspects
         }
 
         return json.dumps(result)

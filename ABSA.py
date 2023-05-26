@@ -201,6 +201,7 @@ def groupAspects(aspect_list, sentences):
         aspect_counts = Counter([aspect for sentence in sentences for aspect in cluster_aspects if aspect in sentence])
         most_common_aspect = aspect_counts.most_common(1)[0][0]
         if len(cluster_aspects) >= 2:
+            cluster_aspects = list(cluster_aspects)
             labels.append(most_common_aspect)
             grouped_aspects[most_common_aspect] = cluster_aspects
     return grouped_aspects
@@ -334,16 +335,18 @@ def visualizeAspectSentiment(aspectSentimentDict):
     # plt.title('Aspect Sentiment Analysis')
     # plt.show()
 
-absa = getABSA(sentences)
-list_sen = getListSentences(sentences)
-count_sen = getCountSentiments(sentences)
-visualize = visualizeAspectSentiment(absa)
+print(json.dumps(groupAspects(getAspects(sentences), sentences), indent=1))
+
+# absa = getABSA(sentences)
+# list_sen = getListSentences(sentences)
+# count_sen = getCountSentiments(sentences)
+# visualize = visualizeAspectSentiment(absa)
 
 # print(visualize)
 
-print(json.dumps(absa, indent=1))
-print(json.dumps(list_sen, indent=1))
-print(json.dumps(count_sen, indent=1))
+# print(json.dumps(absa, indent=1))
+# print(json.dumps(list_sen, indent=1))
+# print(json.dumps(count_sen, indent=1))
 
 # sentiment = getSentiment(sentences)
 # print(json.dumps(sentiment, indent=1))
