@@ -12,7 +12,8 @@ from ABSA import (
     mapSentences,
     getListSentences,
     getCountSentiments,
-    countSentiments
+    countSentiments,
+    sentenceAttributes
 )
 
 app = Flask(__name__)
@@ -292,13 +293,13 @@ def group_aspects():
     
     if request.method == 'POST':
         data = request.json
-        print(data)
         sentences = data['sentences']
         aspect_list = data['aspect_list']
         result = groupAspects(aspect_list, sentences)
 
-        # Convert the set to a list
-        result = list(result)
+        # Convert the values of the dictionary to list
+        for key, value in result.items():
+            result[key] = list(value)
 
         return json.dumps(result)
     
@@ -372,6 +373,26 @@ def init_dashboard():
             "get_list_sentences": get_list_sentences,
             "get_count_sentiments": get_count_sentiments
         }
+
+        return json.dumps(result)
+    
+    return 'This is the Extract Aspects endpoint. Send a POST request with a list of sentences to extract aspects.'
+
+
+@app.route('/sentence-attributes', methods=['POST'])
+def sentence_attributes():
+    # OPTIONS request is sent by the browser to check if the server allows the request
+    # If the server does not allow the request, the browser will not send the POST request
+    # This is a CORS (Cross-Origin Resource Sharing) preflight request
+    # Accept json type
+    if request.method == 'OPTIONS':
+        print("OPTIONS accessed")
+        return 'This is the Extract Aspects endpoint. Send a POST request with a list of sentences to extract aspects.'
+    
+    if request.method == 'POST':
+        data = request.json
+        sentences = data['sentences']
+        result = sentenceAttributes(sentences)
 
         return json.dumps(result)
     

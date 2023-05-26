@@ -171,6 +171,34 @@ def mapSentences(sentences):
             groups[aspect].append(sentiment)
     return groups
 
+def sentenceAttributes(sentences):
+    aspect_list = getAspects(sentences)
+    grouped_aspects = groupAspects(aspect_list, sentences) # structure: {main_aspect: [sub_aspects]}
+    sentencesWithAttributes = []
+    for sentence in sentences:
+        sentence_aspects = getAspects([sentence]) # get aspects of a sentence
+        sentiment = getSentiment([sentence])
+        # if majority of aspects in sentence intersect with a group, assign that group to the sentence
+        # else, assign empty string
+        aspect_group = ""
+        for aspect in sentence_aspects:
+            for group in grouped_aspects:
+                if aspect in grouped_aspects[group]:
+                    aspect_group = group
+
+        sentencesWithAttributes.append(
+            {
+                "sentence": sentence, 
+                "aspects": sentence_aspects,
+                "aspect_group": aspect_group, 
+                "sentiment": {
+                    "classification": sentiment[0][1], 
+                    "probability": sentiment[0][2]
+                    }
+            }
+        )
+    return sentencesWithAttributes
+
 def groupAspects(aspect_list, sentences):
     # Load pre-trained Word2Vec model
     word_model = KeyedVectors.load_word2vec_format("Aspect-Extraction/GoogleNews-vectors-negative300.bin", binary=True, limit=1000000)
@@ -280,6 +308,7 @@ def listSentences(sentence_maps, grouped_aspects):
     for aspect_label, aspects in grouped_aspects.items():
         text_list[aspect_label] = {'Positive': [], 'Negative': []}
         for aspect, sentiment_list in sentence_maps.items():
+            # print(f'<\033[96m{aspect_label}\033[0m> <\033[94m{aspect}\033[0m> | Sentiment List => \033[92m {sentiment_list} \033[0m')
             if aspect == aspect_label:
                 for sentiment in sentiment_list:
                     sentence = sentiment[0][0]
@@ -310,18 +339,18 @@ def getCountSentiments(sentences):
     # my_dict = createAspectSentimentDict(my_groupedAspects, mapSentences(sentences))
     return countSentiments(mapSentences(sentences), my_groupedAspects)
 
-absa = getABSA(sentences)
-list_sen = getListSentences(sentences)
-count_sen = getCountSentiments(sentences)
+# absa = getABSA(sentences)
+# list_sen = getListSentences(sentences)
+# count_sen = getCountSentiments(sentences)
 
 # for aspect_label, nested_dict in absa.items():
 #     print(aspect_label + ":")
 #     for aspect, sentiment in nested_dict.items():
 #         print("  {} -> \n   {}".format(aspect, sentiment))
 
-print(json.dumps(absa, indent=1))
-print(json.dumps(list_sen, indent=1))
-print(json.dumps(count_sen, indent=1))
+# print(json.dumps(absa, indent=1))
+# print(json.dumps(list_sen, indent=1))
+# print(json.dumps(count_sen, indent=1))
 
 # sentiment = getSentiment(sentences)
 # print(json.dumps(sentiment, indent=1))
