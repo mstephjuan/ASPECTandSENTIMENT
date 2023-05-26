@@ -172,9 +172,9 @@ def mapSentences(sentences):
             groups[aspect].append(sentiment)
     return groups
 
-def sentenceAttributes(sentences):
-    aspect_list = getAspects(sentences)
-    grouped_aspects = groupAspects(aspect_list, sentences) # structure: {main_aspect: [sub_aspects]}
+def sentenceAttributes(sentences, grouped_aspects):
+    # aspect_list = getAspects(sentences) if
+    # grouped_aspects = groupAspects(aspect_list, sentences) # structure: {main_aspect: [sub_aspects]}
     sentencesWithAttributes = []
     for sentence in sentences:
         sentence_aspects = getAspects([sentence]) # get aspects of a sentence
