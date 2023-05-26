@@ -9,6 +9,7 @@ from gensim.models import KeyedVectors
 from sklearn.cluster import KMeans
 from scipy.spatial.distance import cdist
 from collections import Counter
+import matplotlib.pyplot as plt
 #from sentence_transformers import SentenceTransformer
 import numpy as np
 nlp = spacy.load("en_core_web_lg")
@@ -201,7 +202,7 @@ def sentenceAttributes(sentences):
 
 def groupAspects(aspect_list, sentences):
     # Load pre-trained Word2Vec model
-    word_model = KeyedVectors.load_word2vec_format("Aspect-Extraction/GoogleNews-vectors-negative300.bin", binary=True, limit=1000000)
+    word_model = KeyedVectors.load_word2vec_format("Aspect-Extraction\GoogleNews-vectors-negative300.bin", binary=True, limit=1000000)
     #word_model = KeyedVectors.load_word2vec_format("Aspect-Extraction/GoogleNews-vectors-negative300.bin", binary=True, limit=500000)
 
     # Convert aspects to word vectors
@@ -228,6 +229,7 @@ def groupAspects(aspect_list, sentences):
         aspect_counts = Counter([aspect for sentence in sentences for aspect in cluster_aspects if aspect in sentence])
         most_common_aspect = aspect_counts.most_common(1)[0][0]
         if len(cluster_aspects) >= 2:
+            cluster_aspects = list(cluster_aspects)
             labels.append(most_common_aspect)
             grouped_aspects[most_common_aspect] = cluster_aspects
     return grouped_aspects
@@ -339,14 +341,37 @@ def getCountSentiments(sentences):
     # my_dict = createAspectSentimentDict(my_groupedAspects, mapSentences(sentences))
     return countSentiments(mapSentences(sentences), my_groupedAspects)
 
+def visualizeAspectSentiment(aspectSentimentDict):
+    aspects = []
+    avg_sentiments = []
+    sentiment_labels = []
+    for aspect, sentiment in aspectSentimentDict.items():
+        aspects.append(aspect)
+        avg_sentiments.append(abs(sentiment['average_score']))
+        if sentiment['sentiment_label'] == 'Positive':
+            sentiment_labels.append('green')
+        elif sentiment['sentiment_label'] == 'Negative':
+            sentiment_labels.append('red')
+        else:
+            sentiment_labels.append('gray')
+    
+    return {
+        'aspects': aspects,
+        'avg_sentiments': avg_sentiments,
+        'sentiment_labels': sentiment_labels
+    }
+    # plt.pie(avg_sentiments, labels=aspects, colors=sentiment_labels, autopct='%1.1f%%')
+    # plt.title('Aspect Sentiment Analysis')
+    # plt.show()
+
+print(json.dumps(groupAspects(getAspects(sentences), sentences), indent=1))
+
 # absa = getABSA(sentences)
 # list_sen = getListSentences(sentences)
 # count_sen = getCountSentiments(sentences)
+# visualize = visualizeAspectSentiment(absa)
 
-# for aspect_label, nested_dict in absa.items():
-#     print(aspect_label + ":")
-#     for aspect, sentiment in nested_dict.items():
-#         print("  {} -> \n   {}".format(aspect, sentiment))
+# print(visualize)
 
 # print(json.dumps(absa, indent=1))
 # print(json.dumps(list_sen, indent=1))
