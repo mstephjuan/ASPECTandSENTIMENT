@@ -18,8 +18,11 @@ from ABSA import (
 )
 
 app = Flask(__name__)
-# Allow requests from http://localhost:4200 to all endpoints in your Flask app. You can customize this according to your needs.
-CORS(app, resources={r"/*": {"origins": "http://localhost:4200"}})
+# Allow requests from http://localhost:4200 and http://localhost:3000 to all endpoints in your Flask app. You can customize this according to your needs.
+# Allow all origins for now
+
+CORS(app, resources={r"/*": {"origins": "*"}})
+# CORS(app, resources={r"/*": {"origins": ["http://localhost:4200", "http://localhost:3000"]}})
 
 # Routes and views go here
 @app.route('/')
