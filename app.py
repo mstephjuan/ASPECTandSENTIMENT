@@ -377,7 +377,7 @@ def init_dashboard():
 
         my_dict = createAspectSentimentDict(my_groupedAspects, mapSentences(sentences))
         get_list_sentences = processSentences(mapSentences(sentences), my_groupedAspects)
-        get_count_sentiments = countSentiments(mapSentences(sentences), my_groupedAspects)
+        get_count_sentiments = countSentiments(get_list_sentences)
         sentence_attributes = sentenceAttributes(sentences, my_groupedAspects)
 
         result = {

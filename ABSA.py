@@ -202,7 +202,8 @@ def sentenceAttributes(sentences, grouped_aspects):
 
 def groupAspects(aspect_list, sentences):
     # Load pre-trained Word2Vec model
-    word_model = KeyedVectors.load_word2vec_format("Aspect-Extraction\GoogleNews-vectors-negative300.bin", binary=True, limit=1000000)
+    word_model = KeyedVectors.load_word2vec_format("C:\\Users\\kreyg\\OneDrive\\Documents\\word2vec-model\\GoogleNews-vectors-negative300.bin\\GoogleNews-vectors-negative300.bin"
+                                                   , binary=True, limit=1000000)
     #word_model = KeyedVectors.load_word2vec_format("Aspect-Extraction/GoogleNews-vectors-negative300.bin", binary=True, limit=500000)
 
     # Convert aspects to word vectors
@@ -262,56 +263,62 @@ def interpretSentimentScore(score):
     else:
         return 'Neutral'
 
-def countSentiments(sentence_maps, grouped_aspects):
+# def countSentiments(sentence_maps, grouped_aspects):
+#     count_dict = {}
+#     for aspect_label, aspects in grouped_aspects.items():
+#         count_dict[aspect_label] = {}
+#         for aspect, sentiment_list in sentence_maps.items():
+#                 if aspect in aspects:
+#                     # print(f'<\033[96m{aspect_label}\033[0m> <\033[94m{aspect}\033[0m> | Sentiment List => \033[92m {sentiment_list} \033[0m')
+#                     pos_count = 0
+#                     neg_count = 0
+#                     # count_dict[aspect_label] = {}
+#                     for sentence in sentiment_list:
+#                         if sentence[0][1] == 'Positive':
+#                             pos_count += 1
+#                         else:
+#                             neg_count += 1
+#                     total_count = pos_count + neg_count
+#                     if total_count > 0:
+#                         pos_percent = (pos_count / total_count) * 100
+#                         neg_percent = (neg_count / total_count) * 100
+#                     else:
+#                         pos_percent = 0
+#                         neg_percent = 0
+#                     if aspect == aspect_label:
+#                         count_dict[aspect_label] = {'pos-count': pos_count, 'neg-count': neg_count, 'pos-percent': pos_percent, 'neg-percent': neg_percent}
+#     return count_dict
+
+def countSentiments(list_of_sentences):
     count_dict = {}
-    for aspect_label, aspects in grouped_aspects.items():
+    for aspect_label in list_of_sentences:
         count_dict[aspect_label] = {}
-        for aspect, sentiment_list in sentence_maps.items():
-                if aspect in aspects:
-                    # print(f'<\033[96m{aspect_label}\033[0m> <\033[94m{aspect}\033[0m> | Sentiment List => \033[92m {sentiment_list} \033[0m')
-                    pos_count = 0
-                    neg_count = 0
-                    # count_dict[aspect_label] = {}
-                    for sentence in sentiment_list:
-                        if sentence[0][1] == 'Positive':
-                            pos_count += 1
-                        else:
-                            neg_count += 1
-                    total_count = pos_count + neg_count
-                    if total_count > 0:
-                        pos_percent = (pos_count / total_count) * 100
-                        neg_percent = (neg_count / total_count) * 100
-                    else:
-                        pos_percent = 0
-                        neg_percent = 0
-                    if aspect == aspect_label:
-                        count_dict[aspect_label] = {'pos-count': pos_count, 'neg-count': neg_count, 'pos-percent': pos_percent, 'neg-percent': neg_percent}
+        for sentiment in list_of_sentences[aspect_label]:
+            if sentiment == 'Positive':
+                pos_count = len(list_of_sentences[aspect_label][sentiment])
+                count_dict[aspect_label]['pos-count'] = pos_count
+            elif sentiment == 'Negative':
+                neg_count = len(list_of_sentences[aspect_label][sentiment])
+                count_dict[aspect_label]['neg-count'] = neg_count
+        total_count = count_dict[aspect_label]['pos-count'] + count_dict[aspect_label]['neg-count']
+        if total_count > 0:
+            pos_percent = (count_dict[aspect_label]['pos-count'] / total_count) * 100
+            neg_percent = (count_dict[aspect_label]['neg-count'] / total_count) * 100
+        else:
+            pos_percent = 0
+            neg_percent = 0
+        count_dict[aspect_label]['pos-percent'] = pos_percent
+        count_dict[aspect_label]['neg-percent'] = neg_percent
     return count_dict
-# def getOverallSentiment(result):
-#     new_dict = {}
-#     for aspect_label, sentiment_dict in result.items():
-#         positive_sentiment = 0
-#         negative_sentiment = 0
-#         for aspect, sentiment in sentiment_dict.items():
-#             if 'positive' in sentiment.lower():
-#                 positive_sentiment += 1
-#             elif 'negative' in sentiment.lower():
-#                 negative_sentiment += 1
-#         total_sentiment = positive_sentiment + negative_sentiment
-#         if total_sentiment > 0:
-#             overall_sentiment = positive_sentiment / total_sentiment
-#         else:
-#             overall_sentiment = 0
-#         new_dict[aspect_label] = {'pos-count': positive_sentiment, 'neg-count': negative_sentiment, 'overall-sentiment': overall_sentiment}
-#     return new_dict
+
 
 def listSentences(sentence_maps, grouped_aspects):
     text_list = {}
     for aspect_label, aspects in grouped_aspects.items():
         text_list[aspect_label] = {'Positive': [], 'Negative': []}
-        for aspect, sentiment_list in sentence_maps.items():
-            # print(f'<\033[96m{aspect_label}\033[0m> <\033[94m{aspect}\033[0m> | Sentiment List => \033[92m {sentiment_list} \033[0m')
-            if aspect == aspect_label:
+        for aspect in aspects:
+            if aspect in sentence_maps:
+                sentiment_list = sentence_maps[aspect]
                 for sentiment in sentiment_list:
                     sentence = sentiment[0][0]
                     sentiment_label = sentiment[0][1]
@@ -338,8 +345,10 @@ def getListSentences(sentences):
 def getCountSentiments(sentences): 
     my_aspects = getAspects(sentences)
     my_groupedAspects = groupAspects(my_aspects, sentences)
+    my_mappedSentences = mapSentences(sentences)
+    my_listSentences = listSentences(my_mappedSentences, my_groupedAspects)
     # my_dict = createAspectSentimentDict(my_groupedAspects, mapSentences(sentences))
-    return countSentiments(mapSentences(sentences), my_groupedAspects)
+    return countSentiments(my_listSentences)
 
 def visualizeAspectSentiment(aspectSentimentDict):
     aspects = []
@@ -364,7 +373,10 @@ def visualizeAspectSentiment(aspectSentimentDict):
     # plt.title('Aspect Sentiment Analysis')
     # plt.show()
 
-print(json.dumps(groupAspects(getAspects(sentences), sentences), indent=1))
+print(countSentiments(getListSentences(sentences)))
+# my_aspects = getAspects(sentences)
+# my_groupedAspects = groupAspects(my_aspects, sentences)
+# print(json.dumps(listSentences(mapSentences(sentences), my_groupedAspects)))
 
 # absa = getABSA(sentences)
 # list_sen = getListSentences(sentences)
