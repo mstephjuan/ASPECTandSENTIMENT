@@ -1,3 +1,4 @@
+import asyncio
 from urllib.parse import unquote
 from flask import Flask, jsonify, request, Response, send_from_directory
 import json
@@ -16,6 +17,8 @@ from ABSA import (
     sentenceAttributes,
     visualizeAspectSentiment
 )
+from scraper import scrape
+
 
 app = Flask(__name__)
 # Allow requests from http://localhost:4200 and http://localhost:3000 to all endpoints in your Flask app. You can customize this according to your needs.
@@ -48,31 +51,31 @@ def aspects():
     :return: A JSON object containing the ABSA of the sentences.
     :rtype: dict
     """
-    sentences = [
-    # Positive sentences
-    "The battery life on this device is impressive.",
-    "The camera takes stunning photos in low light.",
-    "The screen quality is excellent with vibrant colors.",
-    "The performance of this device is incredibly fast.",
-    "Battery performance is outstanding, lasting all day.",
-    "The camera produces sharp and clear images.",
-    "The screen resolution is top-notch and provides a great viewing experience.",
-    "This device delivers exceptional performance for demanding tasks.",
-    "The battery charges quickly and holds the charge well.",
-    "The camera features various modes that enhance photography.",
-    "The screen size is perfect, providing ample space for content.",
-    "The device handles resource-intensive applications with ease.",
-    "Battery efficiency is one of the standout features.",
-    "The camera autofocus is quick and accurate.",
-    "The screen brightness can be adjusted to suit any environment.",
+#     sentences = [
+#     # Positive sentences
+#     "The battery life on this device is impressive.",
+#     "The camera takes stunning photos in low light.",
+#     "The screen quality is excellent with vibrant colors.",
+#     "The performance of this device is incredibly fast.",
+#     "Battery performance is outstanding, lasting all day.",
+#     "The camera produces sharp and clear images.",
+#     "The screen resolution is top-notch and provides a great viewing experience.",
+#     "This device delivers exceptional performance for demanding tasks.",
+#     "The battery charges quickly and holds the charge well.",
+#     "The camera features various modes that enhance photography.",
+#     "The screen size is perfect, providing ample space for content.",
+#     "The device handles resource-intensive applications with ease.",
+#     "Battery efficiency is one of the standout features.",
+#     "The camera autofocus is quick and accurate.",
+#     "The screen brightness can be adjusted to suit any environment.",
     
-    # Negative sentences
-    "The battery drains too quickly and needs frequent charging.",
-    "The camera struggles in low light conditions, resulting in blurry photos.",
-    "The screen has a noticeable color shift when viewed from certain angles.",
-    "The device lags and experiences slowdowns during multitasking.",
-    "Battery life is disappointing, requiring constant recharging.",
-]
+#     # Negative sentences
+#     "The battery drains too quickly and needs frequent charging.",
+#     "The camera struggles in low light conditions, resulting in blurry photos.",
+#     "The screen has a noticeable color shift when viewed from certain angles.",
+#     "The device lags and experiences slowdowns during multitasking.",
+#     "Battery life is disappointing, requiring constant recharging.",
+# ]
 
     # Sample output of getABSA
     # {
@@ -356,6 +359,41 @@ def visualize():
     
     return 'This is the Visualize endpoint. Send a POST request with a list of sentences to visualize.'
 
+
+@app.route('/scraper_reviews', methods=['POST'])
+def scraper_reviews():
+    if request.method == 'OPTIONS':
+        return 'This is the Scraper endpoint. Send a POST request with a url string to scrape.'
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+
+    if request.method == 'POST':
+        data = request.json
+        url = data['url']
+        reviews = scrape(url)
+        reviews_list = json.loads(reviews)
+        my_aspects = getAspects(reviews_list)
+        my_groupedAspects = groupAspects(my_aspects, reviews_list)
+
+
+        my_dict = createAspectSentimentDict(my_groupedAspects, mapSentences(reviews_list))
+        get_list_sentences = processSentences(mapSentences(reviews_list), my_groupedAspects)
+        get_count_sentiments = countSentiments(mapSentences(reviews_list), my_groupedAspects)
+        sentence_attributes = sentenceAttributes(reviews_list, my_groupedAspects)
+
+        result = {
+            "get_absa": my_dict,
+            "get_list_sentences": get_list_sentences,
+            "get_count_sentiments": get_count_sentiments,
+            "get_aspect_groups": my_groupedAspects,
+            "sentence_attributes": sentence_attributes
+        }
+
+        print(json.dumps(reviews))
+        return json.dumps(result)
+
+    return 'This is the Scraper endpoint. Send a POST request with a url string to scrape.'
+
 # Combined for optimization
 @app.route('/init-dashboard', methods=['POST'])
 def init_dashboard():
@@ -377,7 +415,7 @@ def init_dashboard():
 
         my_dict = createAspectSentimentDict(my_groupedAspects, mapSentences(sentences))
         get_list_sentences = processSentences(mapSentences(sentences), my_groupedAspects)
-        get_count_sentiments = countSentiments(get_list_sentences)
+        get_count_sentiments = countSentiments(mapSentences(sentences), my_groupedAspects)
         sentence_attributes = sentenceAttributes(sentences, my_groupedAspects)
 
         result = {
@@ -387,7 +425,7 @@ def init_dashboard():
             "get_aspect_groups": my_groupedAspects,
             "sentence_attributes": sentence_attributes
         }
-
+        
         return json.dumps(result)
     
     return 'This is the Extract Aspects endpoint. Send a POST request with a list of sentences to extract aspects.'
@@ -423,4 +461,4 @@ def serve_static(path):
 
 
 if __name__ == '__main__':
-    app.run(host='localhost', port=5000)
+    app.run(host='localhost', port=5000, threaded=False)

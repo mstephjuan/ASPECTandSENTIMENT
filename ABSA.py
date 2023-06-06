@@ -215,11 +215,10 @@ def groupAspects(aspect_list, sentences):
             print(f"Warning: Aspect '{aspect}' not in vocabulary.")
 
     # Cluster word vectors using k-means
-    kmeans = KMeans(n_clusters=3, n_init=3, random_state=42)
+    kmeans = KMeans(n_clusters=5, n_init=5, random_state=42)
     kmeans.fit(aspect_vectors)
     clusters = kmeans.predict(aspect_vectors)
 
-    # Find representative label for each cluster
     labels = []
     grouped_aspects = {}
     for i in range(kmeans.n_clusters):
@@ -227,15 +226,23 @@ def groupAspects(aspect_list, sentences):
         for j in range(len(aspect_list)):
             if j < len(clusters) and clusters[j] == i:
                 cluster_aspects.add(aspect_list[j])
-        aspect_counts = Counter([aspect for sentence in sentences for aspect in cluster_aspects if aspect in sentence])
-        most_common_aspect = aspect_counts.most_common(1)[0][0]
+        max_similarity = 0
+        most_common_aspect = None
+        for aspect1 in cluster_aspects:
+            similarity = 0
+            for aspect2 in cluster_aspects:
+                if aspect1 != aspect2:
+                    if aspect1 in word_model and aspect2 in word_model:
+                        similarity += word_model.similarity(aspect1, aspect2)
+            if similarity > max_similarity:
+                max_similarity = similarity
+                most_common_aspect = aspect1
         if len(cluster_aspects) >= 2:
             cluster_aspects = list(cluster_aspects)
             labels.append(most_common_aspect)
             grouped_aspects[most_common_aspect] = cluster_aspects
         print(f'<\033[96m{cluster_aspects}\033[0m>')
     return grouped_aspects
-
 
 def createAspectSentimentDict(groupedAspects, sentenceMaps):
     mapScores = {}
@@ -290,7 +297,7 @@ def interpretSentimentScore(score):
 #                         count_dict[aspect_label] = {'pos-count': pos_count, 'neg-count': neg_count, 'pos-percent': pos_percent, 'neg-percent': neg_percent}
 #     return count_dict
 
-def countSentiments(list_of_sentences):
+def countSentiments(sentence_maps, grouped_aspects):
     count_dict = {}
     for aspect_label, aspects in grouped_aspects.items():
         count_dict[aspect_label] = { 'pos-count': 0, 'neg-count': 0, 'pos-percent': 0, 'neg-percent': 0 }
@@ -316,8 +323,8 @@ def countSentiments(list_of_sentences):
                         neg_percent = 0
                     # if aspect == aspect_label:
                     #     count_dict[aspect_label] = {'pos-count': pos_count, 'neg-count': neg_count, 'pos-percent': pos_percent, 'neg-percent': neg_percent}
-                    count_dict[aspect_label]['pos_percent'] = pos_count / total_count
-                    count_dict[aspect_label]['neg_percent'] = neg_count / total_count
+                    # count_dict[aspect_label]['pos_percent'] = pos_percent
+                    # count_dict[aspect_label]['neg_percent'] = neg_percent
     return count_dict
 
 
@@ -327,7 +334,7 @@ def listSentences(sentence_maps, grouped_aspects):
         text_list[aspect_label] = {'Positive': [], 'Negative': []}
         for aspect, sentiment_list in sentence_maps.items():
             # print(f'<\033[96m{aspect_label}\033[0m> <\033[94m{aspect}\033[0m> | Sentiment List => \033[92m {sentiment_list} \033[0m')
-            if aspect == aspect_label:
+            if aspect in aspects:
                 for sentiment in sentiment_list:
                     sentence = sentiment[0][0]
                     sentiment_label = sentiment[0][1]
@@ -355,9 +362,9 @@ def getCountSentiments(sentences):
     my_aspects = getAspects(sentences)
     my_groupedAspects = groupAspects(my_aspects, sentences)
     my_mappedSentences = mapSentences(sentences)
-    my_listSentences = listSentences(my_mappedSentences, my_groupedAspects)
+    # my_listSentences = listSentences(my_mappedSentences, my_groupedAspects)
     # my_dict = createAspectSentimentDict(my_groupedAspects, mapSentences(sentences))
-    return countSentiments(my_listSentences)
+    return countSentiments(my_mappedSentences, my_groupedAspects)
 
 def visualizeAspectSentiment(aspectSentimentDict):
     aspects = []
@@ -382,7 +389,7 @@ def visualizeAspectSentiment(aspectSentimentDict):
     # plt.title('Aspect Sentiment Analysis')
     # plt.show()
 
-print(countSentiments(getListSentences(sentences)))
+# print(countSentiments(getListSentences(sentences)))
 # my_aspects = getAspects(sentences)
 # my_groupedAspects = groupAspects(my_aspects, sentences)
 # print(json.dumps(listSentences(mapSentences(sentences), my_groupedAspects)))
@@ -397,6 +404,7 @@ print(countSentiments(getListSentences(sentences)))
 # print(json.dumps(absa, indent=1))
 # print(json.dumps(list_sen, indent=1))
 # print(json.dumps(count_sen, indent=1))
+# print(json.dumps(groupAspects(getAspects(sentences), sentences), indent=1))
 
 # sentiment = getSentiment(sentences)
 # print(json.dumps(sentiment, indent=1))
