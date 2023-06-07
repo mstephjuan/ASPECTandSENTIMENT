@@ -82,7 +82,8 @@ def getAspects(sentences):
         stops = set(stopwords.words('english'))
         stops.update(['app', 'shopee', 'shoppee', 'item', 'items', 'seller', 'sellers', 'bad', 'thank', 'thanks', 'delivery', 'package', 'things', 'family', 'damage',
                       'niece', 'nephew', 'love', 'error', 'packaging', 'way', 'wife', 'husband', 'stuff', 'people', 'know', 'why', 'think', 'thing', 'kind', 'lots',
-                      'pictures', 'picture', 'guess', 'ones', 'tweaks', 'joke', 'specs', 'work', 'play', 'macbook', 'bit', 'modes', 'mode', 'time', 'times', 'day',])
+                      'pictures', 'picture', 'guess', 'ones', 'tweaks', 'joke', 'specs', 'work', 'play', 'macbook', 'bit', 'modes', 'mode', 'time', 'times', 'day', 'problem', 
+                      'want'])
         meaningful_words = [w for w in words if w not in stops]
         # meaningful_words = [p_stemmer.stem(w) for w in meaningful_words]
         final_text = " ".join(meaningful_words)
