@@ -52,7 +52,7 @@ def scrape(url):
     scraper = Reviews(url)
     results = []
     # x = 1
-    for x in range(1, 21):
+    for x in range(1, 8):
         reviews = scraper.pagination(x)
         print('Page found: ', x)
         if reviews is not False:
@@ -73,4 +73,4 @@ def scrape(url):
     # reviews = scraper.pagination(1)
     # print(scraper.parse(reviews))
 
-print(scrape('https://www.amazon.com/VERSACE-Homme-Dylan-Toilette-Spray/product-reviews/B01JG5UT64/ref=cm_cr_dp_d_show_all_btm?ie=UTF8&reviewerType=all_reviews'))
+# print(scrape('https://www.amazon.com/ASUS-Display-i7-12650H-Thunderbolt-FX517ZM-AS73/product-reviews/B09RMH9B6F/ref=cm_cr_dp_d_show_all_btm?ie=UTF8&reviewerType=all_reviews'))

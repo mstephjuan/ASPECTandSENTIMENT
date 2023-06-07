@@ -80,7 +80,9 @@ def getAspects(sentences):
         letters_only = re.sub("[^a-zA-Z]", " ", review_text)
         words = letters_only.lower().split()
         stops = set(stopwords.words('english'))
-        stops.update(['app', 'shopee', 'shoppee', 'item', 'items', 'seller', 'sellers', 'bad', 'thank', 'thanks', 'delivery', 'package'])
+        stops.update(['app', 'shopee', 'shoppee', 'item', 'items', 'seller', 'sellers', 'bad', 'thank', 'thanks', 'delivery', 'package', 'things', 'family', 'damage',
+                      'niece', 'nephew', 'love', 'error', 'packaging', 'way', 'wife', 'husband', 'stuff', 'people', 'know', 'why', 'think', 'thing', 'kind', 'lots',
+                      'pictures', 'picture', 'guess', 'ones', 'tweaks', 'joke', 'specs', 'work', 'play', 'macbook', 'bit', 'modes', 'mode', 'time', 'times', 'day',])
         meaningful_words = [w for w in words if w not in stops]
         # meaningful_words = [p_stemmer.stem(w) for w in meaningful_words]
         final_text = " ".join(meaningful_words)
@@ -264,9 +266,9 @@ def createAspectSentimentDict(groupedAspects, sentenceMaps):
     return mapScores
 
 def interpretSentimentScore(score):
-    if score > 0.1:
+    if score > 0.2:
         return 'Positive'
-    elif score < -0.1:
+    elif score < -0.2:
         return 'Negative'
     else:
         return 'Neutral'

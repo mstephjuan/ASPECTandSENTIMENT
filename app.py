@@ -370,28 +370,84 @@ def scraper_reviews():
     if request.method == 'POST':
         data = request.json
         url = data['url']
-        reviews = scrape(url)
-        reviews_list = json.loads(reviews)
-        my_aspects = getAspects(reviews_list)
-        my_groupedAspects = groupAspects(my_aspects, reviews_list)
-
-
-        my_dict = createAspectSentimentDict(my_groupedAspects, mapSentences(reviews_list))
-        get_list_sentences = processSentences(mapSentences(reviews_list), my_groupedAspects)
-        get_count_sentiments = countSentiments(mapSentences(reviews_list), my_groupedAspects)
-        sentence_attributes = sentenceAttributes(reviews_list, my_groupedAspects)
-
-        result = {
-            "get_absa": my_dict,
-            "get_list_sentences": get_list_sentences,
-            "get_count_sentiments": get_count_sentiments,
-            "get_aspect_groups": my_groupedAspects,
-            "sentence_attributes": sentence_attributes
-        }
-
-        print(json.dumps(reviews))
-        return json.dumps(result)
-
+        if url == 'https://www.amazon.com/Nikon-COOLPIX-P1000-Digital-Camera/product-reviews/B07F5HPXK4/ref=cm_cr_dp_d_show_all_btm?ie=UTF8&reviewerType=all_reviews':
+            with open('nikon_COOLPIX.json', 'r') as f:
+                reviews_list = json.load(f)
+            # reviews = scrape(url)
+            # reviews_list = json.loads(reviews)
+            my_aspects = getAspects(reviews_list)
+            my_groupedAspects = groupAspects(my_aspects, reviews_list)
+            my_dict = createAspectSentimentDict(my_groupedAspects, mapSentences(reviews_list))
+            get_list_sentences = processSentences(mapSentences(reviews_list), my_groupedAspects)
+            get_count_sentiments = countSentiments(mapSentences(reviews_list), my_groupedAspects)
+            sentence_attributes = sentenceAttributes(reviews_list, my_groupedAspects)
+            result = {
+                "get_absa": my_dict,
+                "get_list_sentences": get_list_sentences,
+                "get_count_sentiments": get_count_sentiments,
+                "get_aspect_groups": my_groupedAspects,
+                "sentence_attributes": sentence_attributes
+            }
+            # print(json.dumps(reviews))
+            return json.dumps(result)
+        elif url == 'https://www.amazon.com/Fender-Player-Stratocaster-Electric-Guitar/product-reviews/B07CTX2F5F/ref=cm_cr_dp_d_show_all_btm?ie=UTF8&reviewerType=all_reviews':
+            with open('fender_guitar.json', 'r') as f:
+                reviews_list = json.load(f)
+            # reviews = scrape(url)
+            # reviews_list = json.loads(reviews)
+            my_aspects = getAspects(reviews_list)
+            my_groupedAspects = groupAspects(my_aspects, reviews_list)
+            my_dict = createAspectSentimentDict(my_groupedAspects, mapSentences(reviews_list))
+            get_list_sentences = processSentences(mapSentences(reviews_list), my_groupedAspects)
+            get_count_sentiments = countSentiments(mapSentences(reviews_list), my_groupedAspects)
+            sentence_attributes = sentenceAttributes(reviews_list, my_groupedAspects)
+            result = {
+                "get_absa": my_dict,
+                "get_list_sentences": get_list_sentences,
+                "get_count_sentiments": get_count_sentiments,
+                "get_aspect_groups": my_groupedAspects,
+                "sentence_attributes": sentence_attributes
+            }
+            # print(json.dumps(reviews))
+            return json.dumps(result)
+        elif url == 'https://www.amazon.com/ASUS-Display-i7-12650H-Thunderbolt-FX517ZM-AS73/product-reviews/B09RMH9B6F/ref=cm_cr_dp_d_show_all_btm?ie=UTF8&reviewerType=all_reviews':
+            with open('asus_tuf.json', 'r') as f:
+                reviews_list = json.load(f)
+            # reviews = scrape(url)
+            # reviews_list = json.loads(reviews)
+            my_aspects = getAspects(reviews_list)
+            my_groupedAspects = groupAspects(my_aspects, reviews_list)
+            my_dict = createAspectSentimentDict(my_groupedAspects, mapSentences(reviews_list))
+            get_list_sentences = processSentences(mapSentences(reviews_list), my_groupedAspects)
+            get_count_sentiments = countSentiments(mapSentences(reviews_list), my_groupedAspects)
+            sentence_attributes = sentenceAttributes(reviews_list, my_groupedAspects)
+            result = {
+                "get_absa": my_dict,
+                "get_list_sentences": get_list_sentences,
+                "get_count_sentiments": get_count_sentiments,
+                "get_aspect_groups": my_groupedAspects,
+                "sentence_attributes": sentence_attributes
+            }
+            # print(json.dumps(reviews))
+            return json.dumps(result)
+        else:
+            reviews = scrape(url)
+            reviews_list = json.loads(reviews)
+            my_aspects = getAspects(reviews_list)
+            my_groupedAspects = groupAspects(my_aspects, reviews_list)
+            my_dict = createAspectSentimentDict(my_groupedAspects, mapSentences(reviews_list))
+            get_list_sentences = processSentences(mapSentences(reviews_list), my_groupedAspects)
+            get_count_sentiments = countSentiments(mapSentences(reviews_list), my_groupedAspects)
+            sentence_attributes = sentenceAttributes(reviews_list, my_groupedAspects)
+            result = {
+                "get_absa": my_dict,
+                "get_list_sentences": get_list_sentences,
+                "get_count_sentiments": get_count_sentiments,
+                "get_aspect_groups": my_groupedAspects,
+                "sentence_attributes": sentence_attributes
+            }
+            # print(json.dumps(reviews))
+            return json.dumps(result)
     return 'This is the Scraper endpoint. Send a POST request with a url string to scrape.'
 
 # Combined for optimization
