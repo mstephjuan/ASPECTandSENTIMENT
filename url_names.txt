@@ -1,0 +1,6 @@
+nikon_cam = 'https://www.amazon.com/Nikon-COOLPIX-P1000-Digital-Camera/product-reviews/B07F5HPXK4/ref=cm_cr_dp_d_show_all_btm?ie=UTF8&reviewerType=all_reviews'
+nikon_cam = nikon_COOLPIX.json
+fender = 'https://www.amazon.com/Fender-Player-Stratocaster-Electric-Guitar/product-reviews/B07CTX2F5F/ref=cm_cr_dp_d_show_all_btm?ie=UTF8&reviewerType=all_reviews'
+fender = fender_guitar.json
+dylan_blue = 'https://www.amazon.com/VERSACE-Homme-Dylan-Toilette-Spray/product-reviews/B01JG5UT64/ref=cm_cr_dp_d_show_all_btm?ie=UTF8&reviewerType=all_reviews'
+dylan_blue = versace_dylan_blue.json

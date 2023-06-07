@@ -21,7 +21,7 @@ class Reviews:
         else:
             new_url = self.url
             r = self.session.get(new_url, headers=self.headers)
-        timeout_interval = random.uniform(20, 22)
+        timeout_interval = random.uniform(20, 21)
         r.html.render(timeout=timeout_interval)
         if not r.html.find('div[data-hook=review]'):
             return False
@@ -52,7 +52,7 @@ def scrape(url):
     scraper = Reviews(url)
     results = []
     # x = 1
-    for x in range(1, 20):
+    for x in range(1, 21):
         reviews = scraper.pagination(x)
         print('Page found: ', x)
         if reviews is not False:
@@ -62,15 +62,15 @@ def scrape(url):
             print(f'Traversed {x-1} pages')
             print('No more reviews')
             break
-        interval = random.uniform(3, 6)
+        interval = random.uniform(10, 13)
         time.sleep(interval)
-    return json.dumps(results, indent=2)
+    # return json.dumps(results, indent=2)
     # print(json.dumps(results))
-    # results_count = len(results)
-    # print('Total reviews: ', results_count)
-    # with open('content.json', 'w') as f:
-    #     json.dump(results, f, indent=4)
+    results_count = len(results)
+    print('Total reviews: ', results_count)
+    with open('content.json', 'w') as f:
+        json.dump(results, f, indent=4)
     # reviews = scraper.pagination(1)
     # print(scraper.parse(reviews))
 
-# print(scrape('https://www.amazon.com/Acer-AN515-58-57Y8-i5-12500H-GeForce-Keyboard/product-reviews/B0BSLWGFXD/ref=cm_cr_dp_d_show_all_btm?ie=UTF8&reviewerType=all_reviews'))
+print(scrape('https://www.amazon.com/VERSACE-Homme-Dylan-Toilette-Spray/product-reviews/B01JG5UT64/ref=cm_cr_dp_d_show_all_btm?ie=UTF8&reviewerType=all_reviews'))
