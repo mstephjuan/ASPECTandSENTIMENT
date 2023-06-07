@@ -95,7 +95,7 @@ def getAspects(sentences):
     return list(aspects)
 
 def getSentiment(texts):
-    model = pickle.load(open("SentimentModel/modelCraig.pkl", 'rb'))
+    model = pickle.load(open("SentimentModel\modelCraigNumberOnly.pkl", 'rb'))
     sentence_sentiments = []
     for text in texts:
         """
@@ -202,7 +202,7 @@ def sentenceAttributes(sentences, grouped_aspects):
 
 def groupAspects(aspect_list, sentences):
     # Load pre-trained Word2Vec model
-    word_model = KeyedVectors.load_word2vec_format("C:\\Users\\kreyg\\OneDrive\\Documents\\word2vec-model\\GoogleNews-vectors-negative300.bin\\GoogleNews-vectors-negative300.bin"
+    word_model = KeyedVectors.load_word2vec_format("Aspect-Extraction\GoogleNews-vectors-negative300.bin"
                                                    , binary=True, limit=1000000)
     #word_model = KeyedVectors.load_word2vec_format("Aspect-Extraction/GoogleNews-vectors-negative300.bin", binary=True, limit=500000)
 
