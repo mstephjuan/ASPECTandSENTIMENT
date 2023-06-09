@@ -64,12 +64,12 @@ def scrape(url):
             break
         interval = random.uniform(10, 13)
         time.sleep(interval)
-    # return json.dumps(results, indent=2)
+    return json.dumps(results, indent=2)
     # print(json.dumps(results))
-    results_count = len(results)
-    print('Total reviews: ', results_count)
-    with open('content.json', 'w') as f:
-        json.dump(results, f, indent=4)
+    # results_count = len(results)
+    # print('Total reviews: ', results_count)
+    # with open('content.json', 'w') as f:
+    #     json.dump(results, f, indent=4)
     # reviews = scraper.pagination(1)
     # print(scraper.parse(reviews))
 

@@ -218,7 +218,7 @@ def absa_extract():
         my_aspects = getAspects(sentences)
         my_groupedAspects = groupAspects(my_aspects, sentences)
         group = mapSentences(sentences)
-        my_dict = createAspectSentimentDict(groupAspects(my_aspects,sentences), mapSentences(sentences))
+        my_dict = createAspectSentimentDict(my_groupedAspects, group)
         for aspect_label, nested_dict in my_dict.items():
             result[aspect_label] = {}
             for aspect, sentiment in nested_dict.items():
@@ -377,9 +377,10 @@ def scraper_reviews():
             # reviews_list = json.loads(reviews)
             my_aspects = getAspects(reviews_list)
             my_groupedAspects = groupAspects(my_aspects, reviews_list)
-            my_dict = createAspectSentimentDict(my_groupedAspects, mapSentences(reviews_list))
-            get_list_sentences = processSentences(mapSentences(reviews_list), my_groupedAspects)
-            get_count_sentiments = countSentiments(mapSentences(reviews_list), my_groupedAspects)
+            my_mapSentences = mapSentences(reviews_list)
+            my_dict = createAspectSentimentDict(my_groupedAspects, my_mapSentences)
+            get_list_sentences = processSentences(my_mapSentences, my_groupedAspects)
+            get_count_sentiments = countSentiments(my_mapSentences, my_groupedAspects)
             sentence_attributes = sentenceAttributes(reviews_list, my_groupedAspects)
             result = {
                 "get_absa": my_dict,
@@ -397,9 +398,10 @@ def scraper_reviews():
             # reviews_list = json.loads(reviews)
             my_aspects = getAspects(reviews_list)
             my_groupedAspects = groupAspects(my_aspects, reviews_list)
-            my_dict = createAspectSentimentDict(my_groupedAspects, mapSentences(reviews_list))
-            get_list_sentences = processSentences(mapSentences(reviews_list), my_groupedAspects)
-            get_count_sentiments = countSentiments(mapSentences(reviews_list), my_groupedAspects)
+            my_mapSentences = mapSentences(reviews_list)
+            my_dict = createAspectSentimentDict(my_groupedAspects, my_mapSentences)
+            get_list_sentences = processSentences(my_mapSentences, my_groupedAspects)
+            get_count_sentiments = countSentiments(my_mapSentences, my_groupedAspects)
             sentence_attributes = sentenceAttributes(reviews_list, my_groupedAspects)
             result = {
                 "get_absa": my_dict,
@@ -417,9 +419,10 @@ def scraper_reviews():
             # reviews_list = json.loads(reviews)
             my_aspects = getAspects(reviews_list)
             my_groupedAspects = groupAspects(my_aspects, reviews_list)
-            my_dict = createAspectSentimentDict(my_groupedAspects, mapSentences(reviews_list))
-            get_list_sentences = processSentences(mapSentences(reviews_list), my_groupedAspects)
-            get_count_sentiments = countSentiments(mapSentences(reviews_list), my_groupedAspects)
+            my_mapSentences = mapSentences(reviews_list)
+            my_dict = createAspectSentimentDict(my_groupedAspects, my_mapSentences)
+            get_list_sentences = processSentences(my_mapSentences, my_groupedAspects)
+            get_count_sentiments = countSentiments(my_mapSentences, my_groupedAspects)
             sentence_attributes = sentenceAttributes(reviews_list, my_groupedAspects)
             result = {
                 "get_absa": my_dict,
@@ -435,9 +438,10 @@ def scraper_reviews():
             reviews_list = json.loads(reviews)
             my_aspects = getAspects(reviews_list)
             my_groupedAspects = groupAspects(my_aspects, reviews_list)
-            my_dict = createAspectSentimentDict(my_groupedAspects, mapSentences(reviews_list))
-            get_list_sentences = processSentences(mapSentences(reviews_list), my_groupedAspects)
-            get_count_sentiments = countSentiments(mapSentences(reviews_list), my_groupedAspects)
+            my_mapSentences = mapSentences(reviews_list)
+            my_dict = createAspectSentimentDict(my_groupedAspects, my_mapSentences)
+            get_list_sentences = processSentences(my_mapSentences, my_groupedAspects)
+            get_count_sentiments = countSentiments(my_mapSentences, my_groupedAspects)
             sentence_attributes = sentenceAttributes(reviews_list, my_groupedAspects)
             result = {
                 "get_absa": my_dict,
@@ -467,11 +471,11 @@ def init_dashboard():
 
         my_aspects = getAspects(sentences)
         my_groupedAspects = groupAspects(my_aspects, sentences)
+        my_mapSentences = mapSentences(sentences)
 
-
-        my_dict = createAspectSentimentDict(my_groupedAspects, mapSentences(sentences))
-        get_list_sentences = processSentences(mapSentences(sentences), my_groupedAspects)
-        get_count_sentiments = countSentiments(mapSentences(sentences), my_groupedAspects)
+        my_dict = createAspectSentimentDict(my_groupedAspects, my_mapSentences)
+        get_list_sentences = processSentences(my_mapSentences, my_groupedAspects)
+        get_count_sentiments = countSentiments(my_mapSentences, my_groupedAspects)
         sentence_attributes = sentenceAttributes(sentences, my_groupedAspects)
 
         result = {

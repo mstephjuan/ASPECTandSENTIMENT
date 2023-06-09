@@ -205,7 +205,7 @@ def sentenceAttributes(sentences, grouped_aspects):
 
 def groupAspects(aspect_list, sentences):
     # Load pre-trained Word2Vec model
-    word_model = KeyedVectors.load_word2vec_format("C:\\Users\\kreyg\\OneDrive\\Documents\\word2vec-model\\GoogleNews-vectors-negative300.bin\\GoogleNews-vectors-negative300.bin"
+    word_model = KeyedVectors.load_word2vec_format("Aspect-Extraction\GoogleNews-vectors-negative300.bin"
                                                    , binary=True, limit=1000000)
     #word_model = KeyedVectors.load_word2vec_format("Aspect-Extraction/GoogleNews-vectors-negative300.bin", binary=True, limit=500000)
 
@@ -328,6 +328,11 @@ def countSentiments(sentence_maps, grouped_aspects):
                     #     count_dict[aspect_label] = {'pos-count': pos_count, 'neg-count': neg_count, 'pos-percent': pos_percent, 'neg-percent': neg_percent}
                     # count_dict[aspect_label]['pos_percent'] = pos_percent
                     # count_dict[aspect_label]['neg_percent'] = neg_percent
+        # round to nearest thenths place
+        count_dict[aspect_label]['pos-percent'] = (count_dict[aspect_label]['pos-count'] / (count_dict[aspect_label]['pos-count'] + count_dict[aspect_label]['neg-count'])) * 100
+        count_dict[aspect_label]['pos-percent'] = round(count_dict[aspect_label]['pos-percent'], 1)
+        count_dict[aspect_label]['neg-percent'] = (count_dict[aspect_label]['neg-count'] / (count_dict[aspect_label]['pos-count'] + count_dict[aspect_label]['neg-count'])) * 100
+        count_dict[aspect_label]['neg-percent'] = round(count_dict[aspect_label]['neg-percent'], 1)
     return count_dict
 
 
