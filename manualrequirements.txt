@@ -1,0 +1,13 @@
+pip=22.3.1
+setuptools=65.5.0
+spacy
+pandas
+beautifulsoup4
+nltk
+gensim
+scikit-learn
+matplotlib
+spacy download en_core_web_lg
+flask
+flask-cors
+requests-html

@@ -205,7 +205,7 @@ def sentenceAttributes(sentences, grouped_aspects):
 
 def groupAspects(aspect_list, sentences):
     # Load pre-trained Word2Vec model
-    word_model = KeyedVectors.load_word2vec_format("Aspect-Extraction\GoogleNews-vectors-negative300.bin"
+    word_model = KeyedVectors.load_word2vec_format("Aspect-Extraction/GoogleNews-vectors-negative300.bin"
                                                    , binary=True, limit=1000000)
     #word_model = KeyedVectors.load_word2vec_format("Aspect-Extraction/GoogleNews-vectors-negative300.bin", binary=True, limit=500000)
 
