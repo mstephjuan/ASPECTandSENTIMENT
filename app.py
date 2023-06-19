@@ -3,6 +3,7 @@ from urllib.parse import unquote
 from flask import Flask, jsonify, request, Response, send_from_directory
 import json
 from flask_cors import CORS
+from gensim.models import KeyedVectors
 from ABSA import (
     createAspectSentimentDict,
     getABSA,
@@ -26,7 +27,8 @@ app = Flask(__name__)
 
 CORS(app, resources={r"/*": {"origins": "*"}})
 # CORS(app, resources={r"/*": {"origins": ["http://localhost:4200", "http://localhost:3000"]}})
-
+word_model = KeyedVectors.load_word2vec_format("C:\\Users\\kreyg\\OneDrive\\Documents\\word2vec-model\\GoogleNews-vectors-negative300.bin\\GoogleNews-vectors-negative300.bin"
+                                                   , binary=True, limit=1000000)
 # Routes and views go here
 @app.route('/')
 def index():
@@ -216,9 +218,9 @@ def absa_extract():
         result = {}
 
         my_aspects = getAspects(sentences)
-        my_groupedAspects = groupAspects(my_aspects, sentences)
+        my_groupedAspects = groupAspects(my_aspects, sentences, word_model)
         group = mapSentences(sentences)
-        my_dict = createAspectSentimentDict(groupAspects(my_aspects,sentences), mapSentences(sentences))
+        my_dict = createAspectSentimentDict(groupAspects(my_aspects,sentences, word_model), mapSentences(sentences))
         for aspect_label, nested_dict in my_dict.items():
             result[aspect_label] = {}
             for aspect, sentiment in nested_dict.items():
@@ -289,7 +291,7 @@ def group_aspects():
         data = request.json
         sentences = data['sentences']
         aspect_list = data['aspect_list']
-        result = groupAspects(aspect_list, sentences)
+        result = groupAspects(aspect_list, sentences, word_model)
 
         # Convert the values of the dictionary to list
         for key, value in result.items():
@@ -376,7 +378,7 @@ def scraper_reviews():
             # reviews = scrape(url)
             # reviews_list = json.loads(reviews)
             my_aspects = getAspects(reviews_list)
-            my_groupedAspects = groupAspects(my_aspects, reviews_list)
+            my_groupedAspects = groupAspects(my_aspects, reviews_list, word_model)
             my_dict = createAspectSentimentDict(my_groupedAspects, mapSentences(reviews_list))
             get_list_sentences = processSentences(mapSentences(reviews_list), my_groupedAspects)
             get_count_sentiments = countSentiments(mapSentences(reviews_list), my_groupedAspects)
@@ -396,7 +398,7 @@ def scraper_reviews():
             # reviews = scrape(url)
             # reviews_list = json.loads(reviews)
             my_aspects = getAspects(reviews_list)
-            my_groupedAspects = groupAspects(my_aspects, reviews_list)
+            my_groupedAspects = groupAspects(my_aspects, reviews_list, word_model)
             my_dict = createAspectSentimentDict(my_groupedAspects, mapSentences(reviews_list))
             get_list_sentences = processSentences(mapSentences(reviews_list), my_groupedAspects)
             get_count_sentiments = countSentiments(mapSentences(reviews_list), my_groupedAspects)
@@ -416,7 +418,7 @@ def scraper_reviews():
             # reviews = scrape(url)
             # reviews_list = json.loads(reviews)
             my_aspects = getAspects(reviews_list)
-            my_groupedAspects = groupAspects(my_aspects, reviews_list)
+            my_groupedAspects = groupAspects(my_aspects, reviews_list, word_model)
             my_dict = createAspectSentimentDict(my_groupedAspects, mapSentences(reviews_list))
             get_list_sentences = processSentences(mapSentences(reviews_list), my_groupedAspects)
             get_count_sentiments = countSentiments(mapSentences(reviews_list), my_groupedAspects)
@@ -434,7 +436,7 @@ def scraper_reviews():
             reviews = scrape(url)
             reviews_list = json.loads(reviews)
             my_aspects = getAspects(reviews_list)
-            my_groupedAspects = groupAspects(my_aspects, reviews_list)
+            my_groupedAspects = groupAspects(my_aspects, reviews_list, word_model)
             my_dict = createAspectSentimentDict(my_groupedAspects, mapSentences(reviews_list))
             get_list_sentences = processSentences(mapSentences(reviews_list), my_groupedAspects)
             get_count_sentiments = countSentiments(mapSentences(reviews_list), my_groupedAspects)
@@ -466,7 +468,7 @@ def init_dashboard():
         sentences = data['sentences']
 
         my_aspects = getAspects(sentences)
-        my_groupedAspects = groupAspects(my_aspects, sentences)
+        my_groupedAspects = groupAspects(my_aspects, sentences, word_model)
 
 
         my_dict = createAspectSentimentDict(my_groupedAspects, mapSentences(sentences))
@@ -501,7 +503,7 @@ def sentence_attributes():
         data = request.json
         sentences = data['sentences']
         aspect_list = getAspects(sentences)
-        grouped_aspects = groupAspects(aspect_list, sentences) # structure: {main_aspect: [sub_aspects]}
+        grouped_aspects = groupAspects(aspect_list, sentences, word_model) # structure: {main_aspect: [sub_aspects]}
         result = sentenceAttributes(sentences, grouped_aspects)
 
         return json.dumps(result)

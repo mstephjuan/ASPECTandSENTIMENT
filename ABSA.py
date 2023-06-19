@@ -14,6 +14,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 nlp = spacy.load("en_core_web_lg")
 import json
+word_model = KeyedVectors.load_word2vec_format("C:\\Users\\kreyg\\OneDrive\\Documents\\word2vec-model\\GoogleNews-vectors-negative300.bin\\GoogleNews-vectors-negative300.bin"
+                                                   , binary=True, limit=1000000)
 #embed = hub.load("https://tfhub.dev/google/universal-sentence-encoder/4")
 #word_model = KeyedVectors.load_word2vec_format("C:\\Users\\kreyg\\OneDrive\\Documents\\word2vec-model\\GoogleNews-vectors-negative300.bin\\GoogleNews-vectors-negative300.bin", binary=True, limit=500000)
 
@@ -203,10 +205,9 @@ def sentenceAttributes(sentences, grouped_aspects):
         )
     return sentencesWithAttributes
 
-def groupAspects(aspect_list, sentences):
+def groupAspects(aspect_list, sentences, word_model):
     # Load pre-trained Word2Vec model
-    word_model = KeyedVectors.load_word2vec_format("C:\\Users\\kreyg\\OneDrive\\Documents\\word2vec-model\\GoogleNews-vectors-negative300.bin\\GoogleNews-vectors-negative300.bin"
-                                                   , binary=True, limit=1000000)
+   
     #word_model = KeyedVectors.load_word2vec_format("Aspect-Extraction/GoogleNews-vectors-negative300.bin", binary=True, limit=500000)
 
     # Convert aspects to word vectors
@@ -351,19 +352,19 @@ def listSentences(sentence_maps, grouped_aspects):
 
 def getABSA(sentences):
     my_aspects = getAspects(sentences)
-    my_groupedAspects = groupAspects(my_aspects, sentences)
+    my_groupedAspects = groupAspects(my_aspects, sentences, word_model)
     my_dict = createAspectSentimentDict(my_groupedAspects, mapSentences(sentences))
     return my_dict
 
 def getListSentences(sentences):
     my_aspects = getAspects(sentences)
-    my_groupedAspects = groupAspects(my_aspects, sentences)
+    my_groupedAspects = groupAspects(my_aspects, sentences, word_model)
     # my_dict = createAspectSentimentDict(my_groupedAspects, mapSentences(sentences))
     return listSentences(mapSentences(sentences), my_groupedAspects)
 
 def getCountSentiments(sentences): 
     my_aspects = getAspects(sentences)
-    my_groupedAspects = groupAspects(my_aspects, sentences)
+    my_groupedAspects = groupAspects(my_aspects, sentences, word_model)
     my_mappedSentences = mapSentences(sentences)
     # my_listSentences = listSentences(my_mappedSentences, my_groupedAspects)
     # my_dict = createAspectSentimentDict(my_groupedAspects, mapSentences(sentences))

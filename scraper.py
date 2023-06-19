@@ -52,7 +52,7 @@ def scrape(url):
     scraper = Reviews(url)
     results = []
     # x = 1
-    for x in range(1, 8):
+    for x in range(1, 4):
         reviews = scraper.pagination(x)
         print('Page found: ', x)
         if reviews is not False:
@@ -62,7 +62,7 @@ def scrape(url):
             print(f'Traversed {x-1} pages')
             print('No more reviews')
             break
-        interval = random.uniform(10, 13)
+        interval = random.uniform(3, 4)
         time.sleep(interval)
     return json.dumps(results, indent=2)
     # print(json.dumps(results))
