@@ -101,8 +101,9 @@ def getAspects(sentences):
 
 def getSentiment(texts):
     model = pickle.load(open("SentimentModel/modelCraig.pkl", 'rb'))
-    sentence_sentiments = []
-    for text in texts:
+    numpy_sentiments = np.empty((0, 3), dtype=object)
+    new_texts = np.array(texts)
+    for text in new_texts:
         """
         function getSentiment(raw_text: string) -> (output: string, prediction: (polarity, subjectivity))
 
@@ -161,7 +162,9 @@ def getSentiment(texts):
         else:
             output = "Positive"
     
-        sentence_sentiments.append([text, output, overall_prob])
+         # Append result to numpy_sentiments
+        numpy_sentiments = np.append(numpy_sentiments, [[text, output, overall_prob]], axis=0)
+    sentence_sentiments = numpy_sentiments.tolist()
 
     return sentence_sentiments
     #return output, positive_prob
@@ -258,6 +261,7 @@ def createAspectSentimentDict(groupedAspects, sentenceMaps):
             aspect_scores.append(overall_prob)
         
         if aspect_scores:
+            aspect_scores = [float(score) for score in aspect_scores]
             avg_score = sum(aspect_scores) / len(aspect_scores)
             sentiment_label = interpretSentimentScore(avg_score)
             
