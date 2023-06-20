@@ -3,18 +3,22 @@ import pandas as pd
 import numpy as np
 from nltk.corpus import stopwords
 from nltk.stem.porter import PorterStemmer
+import nltk
+from nltk.stem import WordNetLemmatizer
+from nltk.tokenize import sent_tokenize
 import pickle
 from collections import Counter
 import json
 import re
 
 nlp = spacy.load("en_core_web_lg")
+model = pickle.load(open("SentimentModel/modelCraig.pkl", 'rb'))
 
 stops = set(stopwords.words("english"))
 stops.update(['app', 'shopee', 'shoppee', 'item', 'items', 'seller', 'sellers', 'bad', 'thank', 'thanks', 'delivery', 'package', 'things', 'family', 'damage',
                 'niece', 'nephew', 'love', 'error', 'packaging', 'way', 'wife', 'husband', 'stuff', 'people', 'know', 'why', 'think', 'thing', 'kind', 'lots',
                 'pictures', 'picture', 'guess', 'ones', 'tweaks', 'joke', 'specs', 'work', 'play', 'macbook', 'bit', 'modes', 'mode', 'time', 'times', 'day', 'problem', 
-                'want', 'others', 'issue'])
+                'want', 'others', 'issue', 'see', 'reason', 'reasons', 'lot', 'lots', 'others', 'issues', 'issues', 'problem', 'problems', 'way', 'ways', 'day', 'days', 'tis', 'puts', 'user', 'hassle', 'gtav', 'means', 'lengths', 'world', 'skim', 'person', 'computer', 'screws', 'years', 'game', 'games', 'lap'])
 
 # List of Reviews
 reviews = [
@@ -59,6 +63,7 @@ def ExtractAspects(reviews):
     new_reviews = Preprocessing(reviews)
     doc = nlp(' '.join(new_reviews)) # convert list of reviews to string (nlp only accepts string)
     aspects = set() # set() to remove duplicates
+    lemmatizer = WordNetLemmatizer()
     for token in doc:
         if token.pos_ == 'NOUN' and token.dep_ == 'nsubj':
             if token.text not in stops: # does not accept aspect words that are stopwords
@@ -67,18 +72,64 @@ def ExtractAspects(reviews):
                     subject_words = [t for t in token.subtree if t.dep_ == 'nsubj']
                     subject_words.sort(key=lambda t: t.i)
                     if subject_words[0] == token:
-                        aspects.add(token.text)
+                        aspect = lemmatizer.lemmatize(token.text, pos='n')
+                        aspects.add(aspect)
                 else:
-                    aspects.add(token.text)
+                    aspect = lemmatizer.lemmatize(token.text, pos='n')
+                    aspects.add(aspect)
             else:
                 stops.add(token.text)
     # print(json.dumps(list(aspects), indent=2))
     return list(aspects)
 
-def ExtractTopAspects(aspects):
-    aspect_counts = Counter(aspects)
-    top_aspects = [aspect for aspect, count in aspect_counts.most_common(7)]
+def ExtractTopAspects(reviews, aspects):
+    aspect_counts = Counter()
+    for aspect in aspects:
+        count = 0
+        for review in reviews:
+            if aspect in review:
+                count += 1
+        aspect_counts[aspect] = count
+    top_aspects = [aspect for aspect, count in aspect_counts.most_common(6)]
     print(json.dumps(top_aspects, indent=2))
     return top_aspects
 
-top_aspects = ExtractTopAspects(ExtractAspects(reviews))
+def ExtractAspectPhrases(reviews, top_aspects):
+    new_reviews = []
+    for review in reviews:
+        # processed_review = re.sub(r'[^\w\s\.]', ' ', review)
+        # processed_review = re.sub(r'\s+', ' ', processed_review)
+        # processed_review = processed_review.strip()
+        # # Split the review into sentences
+        sentences = sent_tokenize(review)
+        # print(json.dumps(sentences, indent=2))
+        new_reviews.extend(sentences)
+    aspect_sents = {}
+    for aspect in top_aspects:
+        aspect_sents[aspect] = []
+        for review in new_reviews:
+            if aspect in review:
+                aspect_sents[aspect].append(review)
+    print(json.dumps(aspect_sents, indent=2))
+    return aspect_sents
+
+def SentimentAnalysis(phrases):
+    aspect_sentiments = {}
+    for aspect, sentences in phrases.items():
+        aspect_sentiments[aspect] = []
+        for sentence in sentences:
+            new_sentence = Preprocessing(sentence)
+            final_sentence = pd.Series(" ".join(new_sentence))
+            score = model.predict(new_sentence)[0]
+            proba_score = model.predict_proba([pd.Series.to_string(final_sentence)])[0]
+            if score == 1:
+                output = 'Negative'
+            else:
+                output = 'Positive'
+            aspect_sentiments[aspect].append((sentence, output))
+    print(json.dumps(aspect_sentiments, indent=2))
+    return aspect_sentiments
+aspects = ExtractAspects(reviews)
+top_aspects = ExtractTopAspects(reviews, aspects)
+aspect_phrases = ExtractAspectPhrases(reviews, top_aspects)
+aspect_sentiments = SentimentAnalysis(aspect_phrases)
