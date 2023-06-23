@@ -20,7 +20,7 @@ stops = set(stopwords.words("english"))
 stops.update(['app', 'shopee', 'shoppee', 'item', 'items', 'seller', 'sellers', 'bad', 'thank', 'thanks', 'delivery', 'package', 'things', 'family', 'damage',
                 'niece', 'nephew', 'love', 'error', 'packaging', 'way', 'wife', 'husband', 'stuff', 'people', 'know', 'why', 'think', 'thing', 'kind', 'lots',
                 'pictures', 'picture', 'guess', 'ones', 'tweaks', 'joke', 'specs', 'work', 'play', 'macbook', 'bit', 'modes', 'mode', 'time', 'times', 'day', 'problem', 
-                'want', 'others', 'issue', 'see', 'reason', 'reasons', 'lot', 'lots', 'others', 'issues', 'issues', 'problem', 'problems', 'way', 'ways', 'day', 'days', 'tis', 'puts', 'user', 'hassle', 'gtav', 'means', 'lengths', 'world', 'skim', 'person', 'computer', 'screws', 'years', 'game', 'games', 'lap'])
+                'want', 'others', 'issue', 'see', 'reason', 'reasons', 'lot', 'lots', 'others', 'issues', 'issues', 'problem', 'problems', 'way', 'ways', 'day', 'days', 'tis', 'puts', 'user', 'hassle', 'gtav', 'means', 'lengths', 'world', 'skim', 'person', 'computer', 'screws', 'years', 'game', 'games', 'lap', 'ect', 'con', 'cons'])
 
 # List of Reviews
 reviews = [
@@ -83,7 +83,7 @@ def ExtractAspects(reviews):
     lemmatizer = WordNetLemmatizer()
     for token in doc:
         if token.pos_ == 'NOUN' and token.dep_ == 'nsubj':
-            if len(token.text) > 1 and token.text not in stops: # exclude single-character words and stopwords
+            if len(token.text) > 3 and token.text not in stops: # exclude single-character words and stopwords
                 # check if the noun is the head of the subject subtree
                 if token.dep_ == 'nsubj' and token.head.pos_ == 'VERB':
                     subject_words = [t for t in token.subtree if t.dep_ == 'nsubj']
@@ -105,10 +105,11 @@ def ExtractTopAspects(reviews, aspects):
         count = 0
         for review in reviews:
             if aspect in review:
-                count += 1
+                count += len(re.findall(r'\b{}\b'.format(aspect), review, re.IGNORECASE))
         aspect_counts[aspect] = count
+    # most_mentioned = aspect_counts.most_common(6) # get the 6 most mentioned aspects with their counts (uncomment to check for aspect frequency)
+    # print(most_mentioned) # print the 6 most mentioned aspects with their counts
     top_aspects = [aspect for aspect, count in aspect_counts.most_common(6)]
-    print(json.dumps(top_aspects, indent=2))
     return top_aspects
 
 def ExtractAspectPhrases(reviews, top_aspects):
@@ -127,7 +128,7 @@ def ExtractAspectPhrases(reviews, top_aspects):
         for review in new_reviews:
             if aspect in review:
                 aspect_sents[aspect].append(review)
-    print(json.dumps(aspect_sents, indent=2))
+    # print(json.dumps(aspect_sents, indent=2))
     return aspect_sents
 
 def getSentiment(reviews):
@@ -150,7 +151,7 @@ def getSentiment(reviews):
         overall_prob = 0
         if pred == 1:
             output = "Negative"
-            overall_prob = (negative_prob * -1)
+            overall_prob = negative_prob
         else:
             output = "Positive"
             overall_prob = positive_prob
@@ -169,7 +170,7 @@ def getRawSentimentScore(phrases):
         # Update the sentiment_counts dictionary
         sentiment_counts[aspect]['Positive'] = counts['Positive']
         sentiment_counts[aspect]['Negative'] = counts['Negative']
-    print(json.dumps(sentiment_counts, indent=2))    
+    # print(json.dumps(sentiment_counts, indent=2))    
     return sentiment_counts
 
 def getNormalizedSentimentScore(phrases):
@@ -201,7 +202,7 @@ def getNormalizedSentimentScore(phrases):
             # print(most_positive.encode('utf-8', errors='replace'))
         elif mean_negative > mean_positive:
             overall_sentiment = 'Negative'
-            mean_proba = mean_negative
+            mean_proba = (mean_negative * -1)
             normalized_counts[aspect]['Normalized_Sentiment'] = overall_sentiment
             normalized_counts[aspect]['Normalized_Proba'] = mean_proba
         else:
@@ -209,7 +210,7 @@ def getNormalizedSentimentScore(phrases):
             mean_proba = 0
             normalized_counts[aspect]['Normalized_Sentiment'] = overall_sentiment
             normalized_counts[aspect]['Normalized_Proba'] = mean_proba
-    print(json.dumps(normalized_counts, indent=2))
+    # print(json.dumps(normalized_counts, indent=2))
     return normalized_counts
 
     #     mean_positive = sum(positive_proba) / len(positive_proba)
@@ -228,18 +229,18 @@ def getNormalizedSentimentScore(phrases):
 
 aspects = ExtractAspects(reviews)
 top_aspects = ExtractTopAspects(reviews, aspects)
-aspect_phrases = ExtractAspectPhrases(reviews, top_aspects)
-raw_score = getRawSentimentScore(aspect_phrases)
-normalized_score = getNormalizedSentimentScore(aspect_phrases)
+# aspect_phrases = ExtractAspectPhrases(reviews, top_aspects)
+# raw_score = getRawSentimentScore(aspect_phrases)
+# normalized_score = getNormalizedSentimentScore(aspect_phrases)
 
 # Call the functions and store the results in a dictionary
-results = {}
-results['aspects'] = ExtractAspects(reviews)
-results['top_aspects'] = ExtractTopAspects(reviews, results['aspects'])
-results['aspect_phrases'] = ExtractAspectPhrases(reviews, results['top_aspects'])
-results['raw_score'] = getRawSentimentScore(results['aspect_phrases'])
-results['normalized_score'] = getNormalizedSentimentScore(results['aspect_phrases'])
+# results = {}
+# results['aspects'] = ExtractAspects(reviews)
+# results['top_aspects'] = ExtractTopAspects(reviews, results['aspects'])
+# results['aspect_phrases'] = ExtractAspectPhrases(reviews, results['top_aspects'])
+# results['raw_score'] = getRawSentimentScore(results['aspect_phrases'])
+# results['normalized_score'] = getNormalizedSentimentScore(results['aspect_phrases'])
 
 # Write the results to a JSON file
-with open('output.json', 'w') as f:
-    json.dump(results, f, indent=2)
+# with open('output.json', 'w') as f:
+#     json.dump(results, f, indent=2)
