@@ -1,3 +1,6 @@
+from sklearn.model_selection import GridSearchCV
+from sklearn.naive_bayes import MultinomialNB
+from sklearn.pipeline import Pipeline
 import spacy
 import pandas as pd
 import numpy as np
@@ -12,9 +15,8 @@ from collections import Counter
 import json
 import re
 
-vectorizer = TfidfVectorizer()
+
 nlp = spacy.load("en_core_web_lg")
-model = pickle.load(open("SentimentModel/modelCraig.pkl", 'rb'))
 
 stops = set(stopwords.words("english"))
 stops.update(['app', 'shopee', 'shoppee', 'item', 'items', 'seller', 'sellers', 'bad', 'thank', 'thanks', 'delivery', 'package', 'things', 'family', 'damage',
@@ -132,6 +134,9 @@ def ExtractAspectPhrases(reviews, top_aspects):
     return aspect_sents
 
 def getSentiment(reviews):
+    # vectorizer = TfidfVectorizer()
+    model = pickle.load(open("SentimentModel/modelCraig.pkl", 'rb'))
+    # print(model)
     aspect_sentiments = []
     for review in reviews:
         p_stemmer = PorterStemmer() # Instantiate PorterStemmer
@@ -142,9 +147,12 @@ def getSentiment(reviews):
         meaningful_words = [p_stemmer.stem(w) for w in meaningful_words] # Stem words
         # Join words back into one string, with a space in between each word
         final_text = pd.Series(" ".join(meaningful_words))
+        # X_vec = vectorizer.fit_transform(final_text)
         # Generate predictions
         pred = model.predict(final_text)[0]
         proba = model.predict_proba([pd.Series.to_string(final_text)])[0]
+        # pred = model.predict(X_vec)[0]
+        # proba = model.predict_proba(X_vec)[0]
 
         positive_prob = proba[0]
         negative_prob = proba[1]
@@ -155,7 +163,33 @@ def getSentiment(reviews):
         else:
             output = "Positive"
             overall_prob = positive_prob
-        aspect_sentiments.append({"review": review, "label": output, "probability": overall_prob})
+
+        for clf in model.estimators_:
+            if isinstance(clf, GridSearchCV):
+                best_estimator = clf.best_estimator_
+                if isinstance(best_estimator, Pipeline):
+                    nb_clf = best_estimator.named_steps['nb']
+                    vectorizer = best_estimator.named_steps['tvec']
+                    # get log probabilities of features given each class
+                    log_prob = nb_clf.feature_log_prob_
+                    # convert log probabilities to regular probabilities
+                    prob = np.exp(log_prob)
+                    # get feature names
+                    feature_names = vectorizer.get_feature_names_out()
+                    # get probabilities for each word in review
+                    pos_word_probs = {}
+                    neg_word_probs = {}
+                    for feature_name, pos_feature_prob, neg_feature_prob in zip(feature_names, prob[0], prob[1]):
+                        if feature_name in meaningful_words:
+                            pos_word_probs[feature_name] = pos_feature_prob
+                            neg_word_probs[feature_name] = neg_feature_prob
+                    aspect_sentiments.append({
+                        'sentence': review,
+                        'label': output,
+                        'probability': overall_prob,
+                        'pos_word_probs': pos_word_probs,
+                        'neg_word_probs': neg_word_probs
+                    })
     # print(aspect_sentiments)
     return aspect_sentiments
 
@@ -189,10 +223,14 @@ def getNormalizedSentimentScore(phrases):
         # if else statement above is to avoid ZeroDivisionError
         mean_negative = sum(negative_list) / len(negative_list) if negative_list else 0
         # print(mean_negative)
-        most_positive = next(s['review'] for s in sentiment if s['probability'] == max(positive_list))
-        most_negative = next(s['review'] for s in sentiment if s['probability'] == max(negative_list)) if negative_list else 'None'
+        most_positive = next(s for s in sentiment if s['probability'] == max(positive_list))
+        most_negative = next(s for s in sentiment if s['probability'] == max(negative_list)) if negative_list else 'None'
+        pos_words = [word for word in most_positive['pos_word_probs'] if word in most_positive['sentence']]
+        neg_words = [word for word in most_negative['neg_word_probs'] if word in most_negative['sentence']] if most_negative else []
         normalized_counts[aspect]['Most_Positive_Sentence'] = most_positive
+        normalized_counts[aspect]['Positive_Words'] = pos_words
         normalized_counts[aspect]['Most_Negative_Sentence'] = most_negative
+        normalized_counts[aspect]['Negative_Words'] = neg_words
         if mean_positive > mean_negative: 
             overall_sentiment = 'Positive'
             mean_proba = mean_positive
@@ -229,10 +267,11 @@ def getNormalizedSentimentScore(phrases):
 
 aspects = ExtractAspects(reviews)
 top_aspects = ExtractTopAspects(reviews, aspects)
-# aspect_phrases = ExtractAspectPhrases(reviews, top_aspects)
-# raw_score = getRawSentimentScore(aspect_phrases)
-# normalized_score = getNormalizedSentimentScore(aspect_phrases)
-
+sentiments = getSentiment(reviews)
+aspect_phrases = ExtractAspectPhrases(reviews, top_aspects)
+raw_score = getRawSentimentScore(aspect_phrases)
+normalized_score = getNormalizedSentimentScore(aspect_phrases)
+print(json.dumps(normalized_score, indent=2))
 # Call the functions and store the results in a dictionary
 # results = {}
 # results['aspects'] = ExtractAspects(reviews)
