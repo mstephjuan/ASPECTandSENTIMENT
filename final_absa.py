@@ -78,6 +78,14 @@ def Preprocessing(reviews):
     # print(json.dumps(preprocessed_reviews, indent=2))
     return preprocessed_reviews
 
+def find_original_word(feature_name, review):
+    pattern = r'\b\w*' + re.escape(feature_name) + r'\w*\b'
+    match = re.search(pattern, review)
+    if match:
+        return match.group()
+    else:
+        return feature_name
+
 def ExtractAspects(reviews):
     new_reviews = Preprocessing(reviews)
     doc = nlp(' '.join(new_reviews)) # convert list of reviews to string (nlp only accepts string)
@@ -183,13 +191,22 @@ def getSentiment(reviews):
                         if feature_name in meaningful_words:
                             pos_word_probs[feature_name] = pos_feature_prob
                             neg_word_probs[feature_name] = neg_feature_prob
-                    aspect_sentiments.append({
-                        'sentence': review,
-                        'label': output,
-                        'probability': overall_prob,
-                        'pos_word_probs': pos_word_probs,
-                        'neg_word_probs': neg_word_probs
-                    })
+                            if output == 'Positive':
+                                most_positive_word = max(pos_word_probs, key=pos_word_probs.get)
+                                aspect_sentiments.append({
+                                'sentence': review,
+                                'label': output,
+                                'probability': overall_prob,
+                                'word_proba': most_positive_word,
+                            })
+                            elif output == 'Negative':
+                                most_negative_word = max(neg_word_probs, key=neg_word_probs.get)
+                                aspect_sentiments.append({
+                                'sentence': review,
+                                'label': output,
+                                'probability': overall_prob,
+                                'word_proba': most_negative_word,
+                            })
     # print(aspect_sentiments)
     return aspect_sentiments
 
@@ -225,12 +242,13 @@ def getNormalizedSentimentScore(phrases):
         # print(mean_negative)
         most_positive = next(s for s in sentiment if s['probability'] == max(positive_list))
         most_negative = next(s for s in sentiment if s['probability'] == max(negative_list)) if negative_list else 'None'
-        pos_words = [word for word in most_positive['pos_word_probs'] if word in most_positive['sentence']]
-        neg_words = [word for word in most_negative['neg_word_probs'] if word in most_negative['sentence']] if most_negative else []
-        normalized_counts[aspect]['Most_Positive_Sentence'] = most_positive
-        normalized_counts[aspect]['Positive_Words'] = pos_words
-        normalized_counts[aspect]['Most_Negative_Sentence'] = most_negative
-        normalized_counts[aspect]['Negative_Words'] = neg_words
+        most_positive_word = find_original_word(most_positive['word_proba'], most_positive['sentence'])
+        most_negative_word = find_original_word(most_negative['word_proba'], most_negative['sentence']) if most_negative != 'None' else 'None'
+        normalized_counts[aspect]['Most_Positive_Sentence'] = most_positive['sentence']
+        normalized_counts[aspect]['Positive_Word'] = most_positive_word
+        normalized_counts[aspect]['Most_Negative_Sentence'] = most_negative['sentence'] if most_negative != 'None' else 'None'
+        normalized_counts[aspect]['Negative_Word'] = most_negative_word
+
         if mean_positive > mean_negative: 
             overall_sentiment = 'Positive'
             mean_proba = mean_positive
@@ -250,20 +268,6 @@ def getNormalizedSentimentScore(phrases):
             normalized_counts[aspect]['Normalized_Proba'] = mean_proba
     # print(json.dumps(normalized_counts, indent=2))
     return normalized_counts
-
-    #     mean_positive = sum(positive_proba) / len(positive_proba)
-    #     mean_negative = sum(negative_proba) / len(negative_proba)
-
-    #     if mean_positive > mean_negative:
-    #         overall_sentiment = 'Positive'
-    #         mean_proba = mean_positive
-    #     else:
-    #         overall_sentiment = 'Negative'
-    #         mean_proba = mean_negative
-    #     normalized_counts[aspect]['Normalized_Sentiment'] = overall_sentiment
-    #     normalized_counts[aspect]['Normalized_Proba'] = mean_proba
-    # print(json.dumps(normalized_counts, indent=2))
-    # return normalized_counts
 
 aspects = ExtractAspects(reviews)
 top_aspects = ExtractTopAspects(reviews, aspects)
