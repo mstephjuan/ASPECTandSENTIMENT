@@ -7,6 +7,8 @@ import numpy as np
 from nltk.corpus import stopwords
 from nltk.stem.porter import PorterStemmer
 import nltk
+nltk.download('wordnet')
+nltk.download('punkt')
 from nltk.stem import WordNetLemmatizer
 from nltk.tokenize import sent_tokenize
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -137,6 +139,7 @@ def ExtractAspectPhrases(reviews, top_aspects):
         aspect_sents[aspect] = []
         for review in new_reviews:
             if aspect in review:
+            # if aspect in review.split():
                 aspect_sents[aspect].append(review)
     # print(json.dumps(aspect_sents, indent=2))
     return aspect_sents
@@ -275,7 +278,7 @@ sentiments = getSentiment(reviews)
 aspect_phrases = ExtractAspectPhrases(reviews, top_aspects)
 raw_score = getRawSentimentScore(aspect_phrases)
 normalized_score = getNormalizedSentimentScore(aspect_phrases)
-print(json.dumps(normalized_score, indent=2))
+# print(json.dumps(normalized_score, indent=2))
 # Call the functions and store the results in a dictionary
 # results = {}
 # results['aspects'] = ExtractAspects(reviews)

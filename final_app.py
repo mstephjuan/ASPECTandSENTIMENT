@@ -20,7 +20,7 @@ import pickle
 model = pickle.load(open("SentimentModel/modelCraig.pkl", 'rb'))
 
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": "*"}})
+CORS(app, resources={r"/*": {"origins": "http://localhost:4200"}})
 
 @app.route('/absa-dashboard', methods=['POST'])
 def absa_dashboard():
@@ -45,11 +45,11 @@ def absa_dashboard():
                 "title": title,
                 "aspects": aspects,
                 "top_aspects": top_aspects,
-                # "aspect_phrases": aspect_phrases,
+                "aspect_phrases": aspect_phrases,
                 "raw_score": raw_score,
                 "normalized_score": normalized_score
             }
-            print(output)
+            # print(output)
             return jsonify(output)
         elif url == 'https://www.amazon.com/Sanabul-Womens-Easter-Boxing-Gloves/product-reviews/B08L87WGF4/ref=cm_cr_getr_d_paging_btm_prev_1?ie=UTF8&reviewerType=all_reviews&pageNumber=1':
             with open('purple_gloves.json', 'r') as f:

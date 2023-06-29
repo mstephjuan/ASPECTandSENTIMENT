@@ -14,10 +14,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 nlp = spacy.load("en_core_web_lg")
 import json
-word_model = KeyedVectors.load_word2vec_format("C:\\Users\\kreyg\\OneDrive\\Documents\\word2vec-model\\GoogleNews-vectors-negative300.bin\\GoogleNews-vectors-negative300.bin"
+word_model = KeyedVectors.load_word2vec_format("Aspect-Extraction\GoogleNews-vectors-negative300.bin"
                                                    , binary=True, limit=1000000)
 #embed = hub.load("https://tfhub.dev/google/universal-sentence-encoder/4")
-#word_model = KeyedVectors.load_word2vec_format("C:\\Users\\kreyg\\OneDrive\\Documents\\word2vec-model\\GoogleNews-vectors-negative300.bin\\GoogleNews-vectors-negative300.bin", binary=True, limit=500000)
+#word_model = KeyedVectors.load_word2vec_format("Aspect-Extraction\GoogleNews-vectors-negative300.bin", binary=True, limit=500000)
 
 # getAspectDescription(text: string) => [{aspect: string, description: string}]
 
@@ -78,7 +78,7 @@ def getAspects(sentences):
     p_stemmer = PorterStemmer()
 
     for sentence in sentences:
-        review_text = BeautifulSoup(sentence, features="html.parser").get_text()
+        review_text = BeautifulSoup(sentence, features="lxml").get_text()
         letters_only = re.sub("[^a-zA-Z]", " ", review_text)
         words = letters_only.lower().split()
         stops = set(stopwords.words('english'))
@@ -125,7 +125,7 @@ def getSentiment(texts):
         p_stemmer = PorterStemmer()
 
         # Remove HTML
-        review_text = BeautifulSoup(text, features="html.parser").get_text()
+        review_text = BeautifulSoup(text, features="lxml").get_text()
 
         # Remove non-letters
         letters_only = re.sub("[^a-zA-Z]", " ", review_text)

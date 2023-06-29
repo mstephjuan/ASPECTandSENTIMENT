@@ -1,4 +1,5 @@
 /combinedenv
+/deploymentenv
 fasttextTesting.ipynb
 loadTagalogRules.ipynb
 tagalog.ipynb
