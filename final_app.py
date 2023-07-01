@@ -9,7 +9,9 @@ from final_absa import (
     ExtractTopAspects,
     ExtractAspectPhrases,
     getRawSentimentScore,
-    getNormalizedSentimentScore
+    getNormalizedSentimentScore,
+    analyzeAspectPhrases,
+    analyzeAllReviews
 )
 from scraper import (
     scrape,
@@ -41,16 +43,20 @@ def absa_dashboard():
             aspect_phrases = ExtractAspectPhrases(reviews, top_aspects)
             raw_score = getRawSentimentScore(aspect_phrases)
             normalized_score = getNormalizedSentimentScore(aspect_phrases)
+            phrases_analysis = analyzeAspectPhrases(aspect_phrases)
+            reviews_analysis = analyzeAllReviews(reviews)
             output = {
                 "title": title,
                 "aspects": aspects,
                 "top_aspects": top_aspects,
                 # "aspect_phrases": aspect_phrases,
                 "raw_score": raw_score,
-                "normalized_score": normalized_score
+                "normalized_score": normalized_score,
+                "phrases_analysis": phrases_analysis,
+                "reviews_analysis": reviews_analysis
             }
-            print(output)
-            return jsonify(output)
+            # print(output)
+            return json.dumps(output)
         elif url == 'https://www.amazon.com/Sanabul-Womens-Easter-Boxing-Gloves/product-reviews/B08L87WGF4/ref=cm_cr_getr_d_paging_btm_prev_1?ie=UTF8&reviewerType=all_reviews&pageNumber=1':
             with open('purple_gloves.json', 'r') as f:
                 reviews = json.load(f)
@@ -61,16 +67,20 @@ def absa_dashboard():
             aspect_phrases = ExtractAspectPhrases(reviews, top_aspects)
             raw_score = getRawSentimentScore(aspect_phrases)
             normalized_score = getNormalizedSentimentScore(aspect_phrases)
+            phrases_analysis = analyzeAspectPhrases(aspect_phrases)
+            reviews_analysis = analyzeAllReviews(reviews)
             output = {
                 "title": title,
                 "aspects": aspects,
                 "top_aspects": top_aspects,
                 # "aspect_phrases": aspect_phrases,
                 "raw_score": raw_score,
-                "normalized_score": normalized_score
+                "normalized_score": normalized_score,
+                "phrases_analysis": phrases_analysis,
+                "reviews_analysis": reviews_analysis
             }
-            print(output)
-            return jsonify(output)
+            # print(output)
+            return json.dumps(output)
         elif url:
             title = getProductTitle(url)
             reviews = scrape(url)
@@ -80,16 +90,20 @@ def absa_dashboard():
             aspect_phrases = ExtractAspectPhrases(reviews, top_aspects)
             raw_score = getRawSentimentScore(aspect_phrases)
             normalized_score = getNormalizedSentimentScore(aspect_phrases)
+            phrases_analysis = analyzeAspectPhrases(aspect_phrases)
+            reviews_analysis = analyzeAllReviews(reviews)
             output = {
                 "title": title,
                 "aspects": aspects,
                 "top_aspects": top_aspects,
                 # "aspect_phrases": aspect_phrases,
                 "raw_score": raw_score,
-                "normalized_score": normalized_score
+                "normalized_score": normalized_score,
+                "phrases_analysis": phrases_analysis,
+                "reviews_analysis": reviews_analysis
             }
-            print(output)
-            return jsonify(output)
+            # print(output)
+            return json.dumps(output)
         else:
             return 'URL does not exist', 404
             

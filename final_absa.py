@@ -79,8 +79,12 @@ def Preprocessing(reviews):
     return preprocessed_reviews
 
 def find_original_word(feature_name, review):
+    if feature_name == 'easi':
+        feature_name = 'easy'
+    if feature_name == 'mani':
+        feature_name = 'many'
     pattern = r'\b\w*' + re.escape(feature_name) + r'\w*\b'
-    match = re.search(pattern, review)
+    match = re.search(pattern, review, re.IGNORECASE)
     if match:
         return match.group()
     else:
@@ -147,12 +151,12 @@ def getSentiment(reviews):
     # print(model)
     aspect_sentiments = []
     for review in reviews:
-        p_stemmer = PorterStemmer() # Instantiate PorterStemmer
+        lemma = WordNetLemmatizer() # Instantiate PorterStemmer
         letters_only = re.sub("[^a-zA-Z]", " ", review) # Remove non-letters
         words = letters_only.lower().split() # Convert words to lower case and split each word up
         global stops # Remove stopwords
         meaningful_words = [w for w in words if w not in stops]
-        meaningful_words = [p_stemmer.stem(w) for w in meaningful_words] # Stem words
+        meaningful_words = [lemma.lemmatize(w) for w in meaningful_words] # Stem words
         # Join words back into one string, with a space in between each word
         final_text = pd.Series(" ".join(meaningful_words))
         # X_vec = vectorizer.fit_transform(final_text)
@@ -193,22 +197,39 @@ def getSentiment(reviews):
                             neg_word_probs[feature_name] = neg_feature_prob
                             if output == 'Positive':
                                 most_positive_word = max(pos_word_probs, key=pos_word_probs.get)
-                                aspect_sentiments.append({
-                                'sentence': review,
-                                'label': output,
-                                'probability': overall_prob,
-                                'word_proba': most_positive_word,
-                            })
+                                new_entry = {  # Declare and initialize new_entry
+                                    'sentence': review,
+                                    'label': output,
+                                    'probability': overall_prob,
+                                    'word_proba': find_original_word(most_positive_word, review),
+                                }
+                                if not any(e['sentence'] == review for e in aspect_sentiments):
+                                    aspect_sentiments.append(new_entry)
                             elif output == 'Negative':
                                 most_negative_word = max(neg_word_probs, key=neg_word_probs.get)
-                                aspect_sentiments.append({
-                                'sentence': review,
-                                'label': output,
-                                'probability': overall_prob,
-                                'word_proba': most_negative_word,
-                            })
+                                new_entry = {  # Declare and initialize new_entry
+                                    'sentence': review,
+                                    'label': output,
+                                    'probability': overall_prob,
+                                    'word_proba': find_original_word(most_negative_word, review)
+                                }
+                                if not any(e['sentence'] == review for e in aspect_sentiments):
+                                    aspect_sentiments.append(new_entry)
     # print(aspect_sentiments)
     return aspect_sentiments
+
+
+def analyzeAspectPhrases(aspect_sents):
+    aspect_sentiments = {}
+    for aspect, sentences in aspect_sents.items():
+        aspect_sentiments[aspect] = (getSentiment(set(sentences)))
+    # print(json.dumps(aspect_sentiments, indent=2))
+    return aspect_sentiments
+
+def analyzeAllReviews(reviews):
+    analysis = getSentiment(reviews)
+    print(json.dumps(analysis, indent=2))
+    return analysis
 
 def getRawSentimentScore(phrases):
     sentiment_counts = {}
@@ -251,21 +272,21 @@ def getNormalizedSentimentScore(phrases):
 
         if mean_positive > mean_negative: 
             overall_sentiment = 'Positive'
-            mean_proba = mean_positive
+            mean_proba = round(mean_positive * 100, 2)
             normalized_counts[aspect]['Normalized_Sentiment'] = overall_sentiment
-            normalized_counts[aspect]['Normalized_Proba'] = mean_proba
+            normalized_counts[aspect]['Normalized_Proba'] = str(mean_proba) + '%'
             # most_positive = next(s['review'] for s in sentiment if s['probability'] == max(positive_list))
             # print(most_positive.encode('utf-8', errors='replace'))
         elif mean_negative > mean_positive:
             overall_sentiment = 'Negative'
-            mean_proba = (mean_negative * -1)
+            round(mean_negative * -100, 2)
             normalized_counts[aspect]['Normalized_Sentiment'] = overall_sentiment
-            normalized_counts[aspect]['Normalized_Proba'] = mean_proba
+            normalized_counts[aspect]['Normalized_Proba'] = str(mean_proba) + '%'
         else:
             overall_sentiment = 'Neutral'
             mean_proba = 0
             normalized_counts[aspect]['Normalized_Sentiment'] = overall_sentiment
-            normalized_counts[aspect]['Normalized_Proba'] = mean_proba
+            normalized_counts[aspect]['Normalized_Proba'] = str(mean_proba) + '%'
     # print(json.dumps(normalized_counts, indent=2))
     return normalized_counts
 
@@ -273,9 +294,13 @@ aspects = ExtractAspects(reviews)
 top_aspects = ExtractTopAspects(reviews, aspects)
 sentiments = getSentiment(reviews)
 aspect_phrases = ExtractAspectPhrases(reviews, top_aspects)
+# print(json.dumps(aspect_phrases, indent=2))
+aspect_sentiments = analyzeAspectPhrases(aspect_phrases)
 raw_score = getRawSentimentScore(aspect_phrases)
 normalized_score = getNormalizedSentimentScore(aspect_phrases)
-print(json.dumps(normalized_score, indent=2))
+review_analysis = analyzeAllReviews(reviews)
+
+# print(json.dumps(normalized_score, indent=2))
 # Call the functions and store the results in a dictionary
 # results = {}
 # results['aspects'] = ExtractAspects(reviews)
