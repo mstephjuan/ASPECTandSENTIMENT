@@ -55,7 +55,7 @@ def absa_dashboard():
                 "phrases_analysis": phrases_analysis,
                 "reviews_analysis": reviews_analysis
             }
-            # print(output)
+            print(json.dumps(output))
             return json.dumps(output)
         elif url == 'https://www.amazon.com/Sanabul-Womens-Easter-Boxing-Gloves/product-reviews/B08L87WGF4/ref=cm_cr_getr_d_paging_btm_prev_1?ie=UTF8&reviewerType=all_reviews&pageNumber=1':
             with open('purple_gloves.json', 'r') as f:

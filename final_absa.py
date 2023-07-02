@@ -14,7 +14,7 @@ import pickle
 from collections import Counter
 import json
 import re
-
+# summarizer = pipeline("summarization", model="facebook/bart-large-cnn")
 
 nlp = spacy.load("en_core_web_lg")
 
@@ -145,6 +145,19 @@ def ExtractAspectPhrases(reviews, top_aspects):
     # print(json.dumps(aspect_sents, indent=2))
     return aspect_sents
 
+# def summarize_text(text):
+#     """
+#     Generate an abstractive summary of the input text using the T5-11B model and the pipeline API.
+#     """
+#     new_text = ''.join(text)
+#     # Load the summarization pipeline with the T5-11B model
+#     summarizer = pipeline('summarization', model='t5-11b', tokenizer='t5-11b')
+
+#     # Generate an abstractive summary
+#     summary = summarizer(new_text, max_length=150, min_length=30, do_sample=False)[0]['summary_text'] # type: ignore
+#     print(summary)
+#     return summary
+
 def getSentiment(reviews):
     # vectorizer = TfidfVectorizer()
     model = pickle.load(open("SentimentModel/modelCraig.pkl", 'rb'))
@@ -222,14 +235,43 @@ def getSentiment(reviews):
 def analyzeAspectPhrases(aspect_sents):
     aspect_sentiments = {}
     for aspect, sentences in aspect_sents.items():
-        aspect_sentiments[aspect] = (getSentiment(set(sentences)))
+        positive_reviews = []
+        negative_reviews = []
+        aspect_sentiments[aspect] = {}
+        sentiments = getSentiment(set(sentences))
+        for sentiment in sentiments:
+            if sentiment['label'] == 'Positive':
+                positive_reviews.append(sentiment)
+            else:
+                negative_reviews.append(sentiment)
+        aspect_sentiments[aspect]['Positive'] = positive_reviews
+        aspect_sentiments[aspect]['Negative'] = negative_reviews
+        # print(f"Aspect: {aspect} \n")
+        # print(f"Positive Reviews: {len(positive_reviews)}, ")
+        # print(f"Negative Reviews: {len(negative_reviews)}")
     # print(json.dumps(aspect_sentiments, indent=2))
     return aspect_sentiments
 
+from nltk.tokenize import sent_tokenize
+
 def analyzeAllReviews(reviews):
-    analysis = getSentiment(reviews)
-    print(json.dumps(analysis, indent=2))
+    analyzed_reviews = {}
+    analyzed_reviews['Positive'] = []
+    analyzed_reviews['Negative'] = []
+    tokenized_reviews = [sent for review in reviews for sent in sent_tokenize(review)]
+    analysis = getSentiment(tokenized_reviews)
+    for a in analysis:
+        if a['label'] == 'Positive':
+            analyzed_reviews['Positive'].append(a)
+        else:
+            analyzed_reviews['Negative'].append(a)
+    # print(f"Positive reviews: {len(analyzed_reviews['Positive'])}")
+    # print(f"Negative reviews: {len(analyzed_reviews['Negative'])}")
+    
+    # print(json.dumps(analysis, indent=2))
     return analysis
+
+
 
 def getRawSentimentScore(phrases):
     sentiment_counts = {}
@@ -245,6 +287,14 @@ def getRawSentimentScore(phrases):
     # print(json.dumps(sentiment_counts, indent=2))    
     return sentiment_counts
 
+def getTotalSentimentCounts(raw_sentiment_score):
+    total_positive = sum([counts['Positive'] for counts in raw_sentiment_score.values()])
+    total_negative = sum([counts['Negative'] for counts in raw_sentiment_score.values()])
+    # print(f"Total Positive: {total_positive}")
+    # print(f"Total Negative: {total_negative}")
+    return {'Positive': total_positive, 'Negative': total_negative}
+
+        
 def getNormalizedSentimentScore(phrases):
     normalized_counts = {}
     for aspect, sentences in phrases.items():
@@ -266,27 +316,30 @@ def getNormalizedSentimentScore(phrases):
         most_positive_word = find_original_word(most_positive['word_proba'], most_positive['sentence'])
         most_negative_word = find_original_word(most_negative['word_proba'], most_negative['sentence']) if most_negative != 'None' else 'None'
         normalized_counts[aspect]['Most_Positive_Sentence'] = most_positive['sentence']
+        normalized_counts[aspect]['Positive_Probability'] = (most_positive['probability'] * 100)
         normalized_counts[aspect]['Positive_Word'] = most_positive_word
         normalized_counts[aspect]['Most_Negative_Sentence'] = most_negative['sentence'] if most_negative != 'None' else 'None'
+        normalized_counts[aspect]['Negative_Probability'] = (most_negative['probability'] * 100) if most_negative != 'None' else 'None'
         normalized_counts[aspect]['Negative_Word'] = most_negative_word
+        
+        # if mean_positive > mean_negative: 
+        #     overall_sentiment = 'Positive'
+        #     mean_proba = round(mean_positive * 100, 2)
+        #     normalized_counts[aspect]['Normalized_Sentiment'] = overall_sentiment
+        #     normalized_counts[aspect]['Normalized_Proba'] = str(mean_proba) + '%'
+        #     # most_positive = next(s['review'] for s in sentiment if s['probability'] == max(positive_list))
+        #     # print(most_positive.encode('utf-8', errors='replace'))
+        # elif mean_negative > mean_positive:
+        #     overall_sentiment = 'Negative'
+        #     round(mean_negative * -100, 2)
+        #     normalized_counts[aspect]['Normalized_Sentiment'] = overall_sentiment
+        #     normalized_counts[aspect]['Normalized_Proba'] = str(mean_proba) + '%'
+        # else:
+        #     overall_sentiment = 'Neutral'
+        #     mean_proba = 0
+        #     normalized_counts[aspect]['Normalized_Sentiment'] = overall_sentiment
+        #     normalized_counts[aspect]['Normalized_Proba'] = str(mean_proba) + '%'
 
-        if mean_positive > mean_negative: 
-            overall_sentiment = 'Positive'
-            mean_proba = round(mean_positive * 100, 2)
-            normalized_counts[aspect]['Normalized_Sentiment'] = overall_sentiment
-            normalized_counts[aspect]['Normalized_Proba'] = str(mean_proba) + '%'
-            # most_positive = next(s['review'] for s in sentiment if s['probability'] == max(positive_list))
-            # print(most_positive.encode('utf-8', errors='replace'))
-        elif mean_negative > mean_positive:
-            overall_sentiment = 'Negative'
-            round(mean_negative * -100, 2)
-            normalized_counts[aspect]['Normalized_Sentiment'] = overall_sentiment
-            normalized_counts[aspect]['Normalized_Proba'] = str(mean_proba) + '%'
-        else:
-            overall_sentiment = 'Neutral'
-            mean_proba = 0
-            normalized_counts[aspect]['Normalized_Sentiment'] = overall_sentiment
-            normalized_counts[aspect]['Normalized_Proba'] = str(mean_proba) + '%'
     # print(json.dumps(normalized_counts, indent=2))
     return normalized_counts
 
@@ -299,7 +352,8 @@ aspect_sentiments = analyzeAspectPhrases(aspect_phrases)
 raw_score = getRawSentimentScore(aspect_phrases)
 normalized_score = getNormalizedSentimentScore(aspect_phrases)
 review_analysis = analyzeAllReviews(reviews)
-
+total_score = getTotalSentimentCounts(raw_score)
+# summarize = summarize_text(reviews)
 # print(json.dumps(normalized_score, indent=2))
 # Call the functions and store the results in a dictionary
 # results = {}
