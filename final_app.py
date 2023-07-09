@@ -7,6 +7,8 @@ from gensim.models import KeyedVectors
 from transformers import LEDForConditionalGeneration, LEDTokenizerFast
 tokenizer = LEDTokenizerFast.from_pretrained('pszemraj/led-base-book-summary')
 summarizer_model = LEDForConditionalGeneration.from_pretrained('pszemraj/led-base-book-summary')
+# from transformers import pipeline
+# summarizer_model = pipeline('summarization', model='facebook/bart-large-cnn')
 from final_absa import (
     ExtractAspects,
     ExtractTopAspects,
@@ -48,6 +50,7 @@ def absa_dashboard():
             top_aspects = ExtractTopAspects(reviews, aspects)
             aspect_phrases = ExtractAspectPhrases(reviews, top_aspects)
             summarized_phrases = summarize_text(aspect_phrases, summarizer_model, tokenizer)
+            print(json.dumps(summarized_phrases, indent=2))
             raw_score = getRawSentimentScore(aspect_phrases)
             normalized_score = getNormalizedSentimentScore(aspect_phrases)
             phrases_analysis = analyzeAspectPhrases(aspect_phrases)
@@ -66,7 +69,7 @@ def absa_dashboard():
                 # "reviews_analysis": reviews_analysis
 
             }
-            print(json.dumps(output))
+            # print(json.dumps(output, indent=2))
             return json.dumps(output)
         elif url == 'https://www.amazon.com/Sanabul-Womens-Easter-Boxing-Gloves/product-reviews/B08L87WGF4/ref=cm_cr_getr_d_paging_btm_prev_1?ie=UTF8&reviewerType=all_reviews&pageNumber=1':
             with open('purple_gloves.json', 'r') as f:

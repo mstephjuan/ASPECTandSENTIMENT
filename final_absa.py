@@ -14,9 +14,13 @@ import pickle
 from collections import Counter
 import json
 import re
-from concurrent.futures import ProcessPoolExecutor
+# from concurrent.futures import ProcessPoolExecutor
 import torch
+import random
 # from transformers import pipeline
+# generator = pipeline('text-generation', model='gpt2')
+# summarizer_model = pipeline('summarization', model='facebook/bart-large-cnn')
+
 from transformers import LEDForConditionalGeneration, LEDTokenizerFast
 tokenizer = LEDTokenizerFast.from_pretrained('pszemraj/led-base-book-summary')
 summarizer_model = LEDForConditionalGeneration.from_pretrained('pszemraj/led-base-book-summary')
@@ -169,6 +173,7 @@ def ExtractAspectPhrases(reviews, top_aspects):
 def summarize_text(aspect_sents, summarizer_model, tokenizer):
     summaries = {}
     for aspects, sents in aspect_sents.items():
+        random.shuffle(sents)
         tokens = tokenizer.encode(' '.join(sents), return_tensors='pt') # max_length=1024, truncation=True
         summary_ids = summarizer_model.generate(tokens, max_length=80, num_beams=2, early_stopping=True)
         summary = tokenizer.decode(summary_ids[0], skip_special_tokens=True)
@@ -178,9 +183,14 @@ def summarize_text(aspect_sents, summarizer_model, tokenizer):
             summaries[aspects] = summary
             # print(f"Aspect: {aspects}")
             # print(f"\t\t{summary}\n")
-    # print(json.dumps(summaries, indent=2))
+    print(json.dumps(summaries, indent=2))
     return summaries
 
+# def generateDescription(product_name, generator, top_aspects):
+#     for aspect in top_aspects:
+#         prompt = f'Generate a description for {aspect} in relation to {product_name}.'
+#         description = generator(prompt, max_length=100)[0]['generated_text']
+#         print(description)
 
 def getSentiment(reviews):
     # vectorizer = TfidfVectorizer()
@@ -383,7 +393,10 @@ if __name__ == '__main__':
     sentiments = getSentiment(reviews)
     aspect_phrases = ExtractAspectPhrases(reviews, top_aspects)
     # print(json.dumps(aspect_phrases, indent=2))
+    # product_name = 'Nikon Coolpix P1000'
+    # generateDescription(product_name, generator, top_aspects)
     summarize = summarize_text(aspect_phrases, summarizer_model, tokenizer)
+    # print(json.dumps(summarize, indent=2)) 
     # print(json.dumps(aspect_phrases, indent=2))
     # aspect_sentiments = analyzeAspectPhrases(aspect_phrases)
     # raw_score = getRawSentimentScore(aspect_phrases)
