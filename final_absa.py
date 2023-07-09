@@ -14,7 +14,14 @@ import pickle
 from collections import Counter
 import json
 import re
-# summarizer = pipeline("summarization", model="facebook/bart-large-cnn")
+from concurrent.futures import ProcessPoolExecutor
+import torch
+# from transformers import pipeline
+from transformers import LEDForConditionalGeneration, LEDTokenizerFast
+tokenizer = LEDTokenizerFast.from_pretrained('pszemraj/led-base-book-summary')
+summarizer_model = LEDForConditionalGeneration.from_pretrained('pszemraj/led-base-book-summary')
+
+# max_length = 512
 
 nlp = spacy.load("en_core_web_lg")
 
@@ -22,7 +29,7 @@ stops = set(stopwords.words("english"))
 stops.update(['app', 'shopee', 'shoppee', 'item', 'items', 'seller', 'sellers', 'bad', 'thank', 'thanks', 'delivery', 'package', 'things', 'family', 'damage',
                 'niece', 'nephew', 'love', 'error', 'packaging', 'way', 'wife', 'husband', 'stuff', 'people', 'know', 'why', 'think', 'thing', 'kind', 'lots',
                 'pictures', 'picture', 'guess', 'ones', 'tweaks', 'joke', 'specs', 'work', 'play', 'macbook', 'bit', 'modes', 'mode', 'time', 'times', 'day', 'problem', 
-                'want', 'others', 'issue', 'see', 'reason', 'reasons', 'lot', 'lots', 'others', 'issues', 'issues', 'problem', 'problems', 'way', 'ways', 'day', 'days', 'tis', 'puts', 'user', 'hassle', 'gtav', 'means', 'lengths', 'world', 'skim', 'person', 'computer', 'screws', 'years', 'game', 'games', 'lap', 'ect', 'con', 'cons'])
+                'want', 'others', 'issue', 'see', 'reason', 'reasons', 'lot', 'lots', 'others', 'issues', 'issues', 'problem', 'problems', 'way', 'ways', 'day', 'days', 'tis', 'puts', 'user', 'hassle', 'gtav', 'means', 'lengths', 'world', 'skim', 'person', 'computer', 'screws', 'years', 'game', 'games', 'lap', 'ect', 'con', 'cons', 'camera'])
 
 # List of Reviews
 reviews = [
@@ -145,18 +152,35 @@ def ExtractAspectPhrases(reviews, top_aspects):
     # print(json.dumps(aspect_sents, indent=2))
     return aspect_sents
 
-# def summarize_text(text):
-#     """
-#     Generate an abstractive summary of the input text using the T5-11B model and the pipeline API.
-#     """
-#     new_text = ''.join(text)
-#     # Load the summarization pipeline with the T5-11B model
-#     summarizer = pipeline('summarization', model='t5-11b', tokenizer='t5-11b')
+# def split_text_sliding_window(text, max_length=1024, step_size=512):
+#     text_chunks = []
+#     start = 0
+#     end = max_length
+#     while start < len(text):
+#         text_chunks.append(text[start:end])
+#         start += step_size
+#         end += step_size
+#     return text_chunks
 
-#     # Generate an abstractive summary
-#     summary = summarizer(new_text, max_length=150, min_length=30, do_sample=False)[0]['summary_text'] # type: ignore
-#     print(summary)
-#     return summary
+
+# def summarize_chunk(chunk):
+#     return summarizer(chunk, min_length=10, max_length=50)[0]['summary_text']
+
+def summarize_text(aspect_sents, summarizer_model, tokenizer):
+    summaries = {}
+    for aspects, sents in aspect_sents.items():
+        tokens = tokenizer.encode(' '.join(sents), return_tensors='pt') # max_length=1024, truncation=True
+        summary_ids = summarizer_model.generate(tokens, max_length=80, num_beams=2, early_stopping=True)
+        summary = tokenizer.decode(summary_ids[0], skip_special_tokens=True)
+        if not summary.endswith('.'):
+            # Remove the last sentence
+            summary = '. '.join(summary.split('. ')[:-1]) + '.'
+            summaries[aspects] = summary
+            # print(f"Aspect: {aspects}")
+            # print(f"\t\t{summary}\n")
+    # print(json.dumps(summaries, indent=2))
+    return summaries
+
 
 def getSentiment(reviews):
     # vectorizer = TfidfVectorizer()
@@ -343,17 +367,32 @@ def getNormalizedSentimentScore(phrases):
     # print(json.dumps(normalized_counts, indent=2))
     return normalized_counts
 
-aspects = ExtractAspects(reviews)
-top_aspects = ExtractTopAspects(reviews, aspects)
-sentiments = getSentiment(reviews)
-aspect_phrases = ExtractAspectPhrases(reviews, top_aspects)
-# print(json.dumps(aspect_phrases, indent=2))
-aspect_sentiments = analyzeAspectPhrases(aspect_phrases)
-raw_score = getRawSentimentScore(aspect_phrases)
-normalized_score = getNormalizedSentimentScore(aspect_phrases)
-review_analysis = analyzeAllReviews(reviews)
-total_score = getTotalSentimentCounts(raw_score)
-# summarize = summarize_text(reviews)
+# def summarize_text(aspect_phrases):
+#     summary = {}
+#     for aspect, sentences in aspect_phrases.items():
+#         text = ' '.join(sentences)
+#         prompt = f"Write a summary of the following {aspect} reviews: {text}"
+#         input_ids = tokenizer.encode(prompt, return_tensors='pt')
+#         output = model.generate(input_ids, max_length=50)
+#         summary[aspect] = tokenizer.decode(output[0], skip_special_tokens=True)
+#     return summary
+
+if __name__ == '__main__':
+    aspects = ExtractAspects(reviews)
+    top_aspects = ExtractTopAspects(reviews, aspects)
+    sentiments = getSentiment(reviews)
+    aspect_phrases = ExtractAspectPhrases(reviews, top_aspects)
+    # print(json.dumps(aspect_phrases, indent=2))
+    summarize = summarize_text(aspect_phrases, summarizer_model, tokenizer)
+    # print(json.dumps(aspect_phrases, indent=2))
+    # aspect_sentiments = analyzeAspectPhrases(aspect_phrases)
+    # raw_score = getRawSentimentScore(aspect_phrases)
+    # normalized_score = getNormalizedSentimentScore(aspect_phrases)
+    # review_analysis = analyzeAllReviews(reviews)
+    # total_score = getTotalSentimentCounts(raw_score)
+    # summarize_phrases = summarize_text(aspect_phrases)
+    # print(json.dumps(summarize_phrases, indent=3))
+    
 # print(json.dumps(normalized_score, indent=2))
 # Call the functions and store the results in a dictionary
 # results = {}

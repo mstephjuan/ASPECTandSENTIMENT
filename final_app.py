@@ -4,6 +4,9 @@ from flask import Flask, jsonify, request, Response, send_from_directory
 import json
 from flask_cors import CORS
 from gensim.models import KeyedVectors
+from transformers import LEDForConditionalGeneration, LEDTokenizerFast
+tokenizer = LEDTokenizerFast.from_pretrained('pszemraj/led-base-book-summary')
+summarizer_model = LEDForConditionalGeneration.from_pretrained('pszemraj/led-base-book-summary')
 from final_absa import (
     ExtractAspects,
     ExtractTopAspects,
@@ -11,7 +14,9 @@ from final_absa import (
     getRawSentimentScore,
     getNormalizedSentimentScore,
     analyzeAspectPhrases,
-    analyzeAllReviews
+    analyzeAllReviews,
+    getTotalSentimentCounts,
+    summarize_text
 )
 from scraper import (
     scrape,
@@ -20,6 +25,7 @@ from scraper import (
 import pickle
 
 model = pickle.load(open("SentimentModel/modelCraig.pkl", 'rb'))
+
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})
@@ -41,19 +47,24 @@ def absa_dashboard():
             # print(aspects)
             top_aspects = ExtractTopAspects(reviews, aspects)
             aspect_phrases = ExtractAspectPhrases(reviews, top_aspects)
+            summarized_phrases = summarize_text(aspect_phrases, summarizer_model, tokenizer)
             raw_score = getRawSentimentScore(aspect_phrases)
             normalized_score = getNormalizedSentimentScore(aspect_phrases)
             phrases_analysis = analyzeAspectPhrases(aspect_phrases)
-            reviews_analysis = analyzeAllReviews(reviews)
+            # reviews_analysis = analyzeAllReviews(reviews)
+            total_count = getTotalSentimentCounts(raw_score)
             output = {
                 "title": title,
                 "aspects": aspects,
                 "top_aspects": top_aspects,
+                "summarized_phrases": summarized_phrases,
                 # "aspect_phrases": aspect_phrases,
                 "raw_score": raw_score,
                 "normalized_score": normalized_score,
                 "phrases_analysis": phrases_analysis,
-                "reviews_analysis": reviews_analysis
+                "total_count": total_count
+                # "reviews_analysis": reviews_analysis
+
             }
             print(json.dumps(output))
             return json.dumps(output)
@@ -65,19 +76,24 @@ def absa_dashboard():
             # print(aspects)
             top_aspects = ExtractTopAspects(reviews, aspects)
             aspect_phrases = ExtractAspectPhrases(reviews, top_aspects)
+            summarized_phrases = summarize_text(aspect_phrases, summarizer_model, tokenizer)
             raw_score = getRawSentimentScore(aspect_phrases)
             normalized_score = getNormalizedSentimentScore(aspect_phrases)
             phrases_analysis = analyzeAspectPhrases(aspect_phrases)
-            reviews_analysis = analyzeAllReviews(reviews)
+            # reviews_analysis = analyzeAllReviews(reviews)
+            total_count = getTotalSentimentCounts(raw_score)
             output = {
                 "title": title,
                 "aspects": aspects,
                 "top_aspects": top_aspects,
+                "summarized_phrases": summarized_phrases,
                 # "aspect_phrases": aspect_phrases,
                 "raw_score": raw_score,
                 "normalized_score": normalized_score,
                 "phrases_analysis": phrases_analysis,
-                "reviews_analysis": reviews_analysis
+                "total_count": total_count
+                # "reviews_analysis": reviews_analysis
+
             }
             # print(output)
             return json.dumps(output)
@@ -88,19 +104,24 @@ def absa_dashboard():
             # print(aspects)
             top_aspects = ExtractTopAspects(reviews, aspects)
             aspect_phrases = ExtractAspectPhrases(reviews, top_aspects)
+            summarized_phrases = summarize_text(aspect_phrases, summarizer_model, tokenizer)
             raw_score = getRawSentimentScore(aspect_phrases)
             normalized_score = getNormalizedSentimentScore(aspect_phrases)
             phrases_analysis = analyzeAspectPhrases(aspect_phrases)
-            reviews_analysis = analyzeAllReviews(reviews)
+            # reviews_analysis = analyzeAllReviews(reviews)
+            total_count = getTotalSentimentCounts(raw_score)
             output = {
                 "title": title,
                 "aspects": aspects,
                 "top_aspects": top_aspects,
+                "summarized_phrases": summarized_phrases,
                 # "aspect_phrases": aspect_phrases,
                 "raw_score": raw_score,
                 "normalized_score": normalized_score,
                 "phrases_analysis": phrases_analysis,
-                "reviews_analysis": reviews_analysis
+                "total_count": total_count
+                # "reviews_analysis": reviews_analysis
+
             }
             # print(output)
             return json.dumps(output)
